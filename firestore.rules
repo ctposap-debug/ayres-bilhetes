@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // Mesma lista de e-mails do config.js (ADMINS)
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.email in ['cursos@ayrespolesport.com', 'ct.posap@gmail.com'];
+    }
+    function expirou(d) { return d.estado == 'reservado' && d.expira < request.time; }
+
+    // Lugares: todos veem a disponibilidade; o público só pode RESERVAR um lugar livre,
+    // dentro de uma transação que também cria o pedido correspondente.
+    match /lugares/{id} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'pedido', 'expira']) &&
+        request.resource.data.estado == 'reservado' &&
+        (resource.data.estado == 'livre' || expirou(resource.data)) &&
+        request.resource.data.expira is timestamp &&
+        request.resource.data.expira <= request.time + duration.value(35, 'm') &&
+        existsAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)) &&
+        id in getAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)).data.lugares
+      );
+    }
+
+    // Pedidos: dados pessoais — só a organização lê. O público só cria reservas pendentes.
+    match /pedidos/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasOnly(['codigo', 'nome', 'telefone', 'email', 'nota', 'lugares', 'total',
+                                             'estado', 'criado', 'expira', 'bilhete']) &&
+        request.resource.data.estado == 'pendente' &&
+        request.resource.data.criado == request.time &&
+        request.resource.data.lugares is list &&
+        request.resource.data.lugares.size() >= 1 && request.resource.data.lugares.size() <= 20 &&
+        request.resource.data.nome is string && request.resource.data.nome.size() <= 80 &&
+        request.resource.data.email is string && request.resource.data.email.size() <= 120 &&
+        request.resource.data.telefone is string && request.resource.data.telefone.size() <= 20 &&
+        request.resource.data.nota is string && request.resource.data.nota.size() <= 300 &&
+        existsAfter(/databases/$(db)/documents/bilhetes/$(request.resource.data.bilhete))
+      );
+    }
+
+    // Bilhetes: quem tem o link (id secreto) consegue abrir o seu; não dá para listar.
+    match /bilhetes/{id} {
+      allow get: if true;
+      allow list, update, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.estado == 'pendente' &&
+        existsAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)) &&
+        getAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)).data.bilhete == id &&
+        getAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)).data.lugares == request.resource.data.lugares
+      );
+    }
+  }
+}

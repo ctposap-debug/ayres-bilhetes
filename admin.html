@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Painel — Bilhetes AYRE'S</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a005b">
+<link rel="icon" href="img/ayres.jpg">
+<link rel="stylesheet" href="estilo.css">
+<style id="cssmapa"></style>
+<style>
+  .abas{display:flex;gap:6px;overflow:auto;margin:10px 0;position:sticky;top:0;background:var(--azul);padding:6px 0;z-index:5}
+  .abas button{flex:1;white-space:nowrap;border:1px solid #ffffff30;background:transparent;color:var(--txt);padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+  .abas button.on{background:var(--ouro);color:#1a1440;border-color:var(--ouro)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .kpi{background:var(--azul3);border-radius:10px;padding:10px;text-align:center}
+  .kpi b{display:block;font-size:1.3rem;color:var(--ouro2)}.kpi span{font-size:.72rem;color:var(--txt2)}
+  @media(max-width:520px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .ped{border:1px solid #ffffff20;border-radius:12px;padding:12px;margin:8px 0;background:var(--azul2)}
+  .ped .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .ped .acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .ped .acoes a{text-decoration:none}
+  .filtros{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .filtros button{border:1px solid #ffffff30;background:transparent;color:var(--txt);padding:6px 10px;border-radius:20px;cursor:pointer;font-size:.85rem}
+  .filtros button.on{background:#fff;color:#1a1440}
+  #leitor{width:100%;max-width:420px;margin:0 auto;border-radius:12px;overflow:hidden}
+  .lugarlinha{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #ffffff14;font-size:.92rem}
+  .lugarlinha input{width:auto}
+</style>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+<div class="wrap" style="padding-bottom:40px">
+
+  <!-- login -->
+  <section id="vLogin" class="card oculto" style="max-width:420px;margin:40px auto">
+    <div class="logos"><img src="img/ayres.jpg" alt=""><img src="img/posap.jpg" alt=""></div>
+    <h2 class="centro">Painel de bilhetes</h2>
+    <button class="btn" id="btGoogle" type="button" style="background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;gap:10px">
+      <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      Entrar com Google</button>
+    <p class="nota centro" style="margin:14px 0 0">ou com e-mail e palavra-passe</p>
+    <form id="fLogin">
+      <label>E-mail</label><input id="lEmail" type="email" autocomplete="username" required>
+      <label>Palavra-passe</label><input id="lPass" type="password" autocomplete="current-password" required>
+      <div id="lErro" class="erro oculto" style="margin-top:10px"></div>
+      <button class="btn" style="margin-top:14px">Entrar</button>
+    </form>
+    <p class="nota centro"><a href="#" id="lnkReset">Esqueci-me da palavra-passe</a></p>
+  </section>
+
+  <!-- painel -->
+  <section id="vPainel" class="oculto">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:6px 0;color:var(--ouro2)">Bilhetes</h2>
+      <button class="btn sec peq" id="btSair">Sair</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <nav class="abas">
+      <button data-aba="aReservas" class="on">Reservas</button>
+      <button data-aba="aMapa">Mapa</button>
+      <button data-aba="aCheckin">Entrada</button>
+      <button data-aba="aMais">Mais</button>
+    </nav>
+
+    <div id="aReservas" class="aba">
+      <input id="busca" placeholder="Procurar por nome, código, telemóvel ou e-mail">
+      <div class="filtros" id="filtros">
+        <button data-f="pendente" class="on">A aguardar</button><button data-f="pago">Pagos</button>
+        <button data-f="expirado">Expirados</button><button data-f="cancelado">Cancelados</button><button data-f="todos">Todos</button>
+      </div>
+      <div id="lista"></div>
+    </div>
+
+    <div id="aMapa" class="aba oculto">
+      <p class="nota centro">Toque numa mesa para ver quem está sentado ou vender lugares no local.</p>
+      <svg class="mapa" id="mapa"></svg>
+      <div id="detMesa"></div>
+    </div>
+
+    <div id="aCheckin" class="aba oculto">
+      <div class="card centro">
+        <div id="leitor"></div>
+        <button class="btn" id="btLer" style="margin-top:10px">Ler QR Code</button>
+        <div class="linha" style="margin-top:10px">
+          <input id="codManual" placeholder="ou escreva o código (ex.: K3F9QZ)" style="text-transform:uppercase">
+          <button class="btn sec" id="btCod" style="flex:0 0 auto;width:auto">Procurar</button>
+        </div>
+      </div>
+      <div id="resCheckin"></div>
+    </div>
+
+    <div id="aMais" class="aba oculto">
+      <div class="card">
+        <h3 style="margin-top:0">Exportar</h3>
+        <button class="btn sec" id="btCsv">Descarregar lista (Excel / CSV)</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Configurar sala</h3>
+        <p class="nota">Cria os lugares das mesas. Fazer só uma vez, antes de abrir as vendas. Não apaga nada que já exista.</p>
+        <button class="btn sec" id="btInit">Criar lugares das mesas</button>
+        <p id="initRes" class="nota"></p>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Link de venda</h3>
+        <p class="nota">Partilhe este link no Instagram, WhatsApp e no site:</p>
+        <input id="linkVenda" readonly onclick="this.select()">
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- confirmação enviada -->
+<div class="modal" id="mOk"><div class="folha centro">
+  <h2>Pagamento confirmado</h2>
+  <p id="okTxt"></p>
+  <div id="okMail" class="nota"></div>
+  <a class="btn verde" id="okZap" target="_blank" rel="noopener" style="display:block;text-decoration:none;margin:12px 0">Enviar bilhete por WhatsApp</a>
+  <button class="btn sec" data-fechar>Fechar</button>
+</div></div>
+
+<script type="module">
+import { db, auth, collection, doc, onSnapshot, runTransaction, serverTimestamp, deleteField, writeBatch, getDoc, getDocs,
+  query, where, orderBy, Timestamp } from "./fb.js";
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { ADMINS, EVENTO, TOTAL_MESAS, LUGARES_POR_MESA, idLugar, euro, descreverLugares, precoDosLugares, mesaDe, lugarDe }
+  from "./config.js";
+import { desenharMapa, estadoEfetivo, CSS_MAPA } from "./mapa.js";
+
+const $ = id => document.getElementById(id);
+$("cssmapa").textContent = CSS_MAPA;
+const base = location.origin + location.pathname.replace(/admin\.html$/, "");
+const linkBilhete = bid => `${base}bilhete.html?id=${bid}`;
+$("linkVenda").value = base;
+
+// ---------- login ----------
+$("fLogin").onsubmit = async e => {
+  e.preventDefault(); $("lErro").classList.add("oculto");
+  try { await signInWithEmailAndPassword(auth, $("lEmail").value.trim(), $("lPass").value); }
+  catch { $("lErro").textContent = "E-mail ou palavra-passe incorretos."; $("lErro").classList.remove("oculto"); }
+};
+$("btGoogle").onclick = async () => {
+  $("lErro").classList.add("oculto");
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { if (e.code !== "auth/popup-closed-by-user") alertar("Não foi possível entrar com Google. Tente de novo."); }
+};
+$("lnkReset").onclick = async e => {
+  e.preventDefault(); const em = $("lEmail").value.trim();
+  if (!em) return alertar("Escreva primeiro o seu e-mail.");
+  try { await sendPasswordResetEmail(auth, em); alertar("Enviámos um e-mail para redefinir a palavra-passe."); } catch { alertar("Não foi possível enviar."); }
+};
+$("btSair").onclick = () => signOut(auth);
+function alertar(t) { $("lErro").textContent = t; $("lErro").classList.remove("oculto"); }
+
+let unsub = [];
+onAuthStateChanged(auth, u => {
+  unsub.forEach(f => f()); unsub = [];
+  const ok = u && ADMINS.includes((u.email || "").toLowerCase());
+  $("vLogin").classList.toggle("oculto", !!ok);
+  $("vPainel").classList.toggle("oculto", !ok);
+  if (u && !ok) { alertar("Esta conta não tem acesso ao painel."); signOut(auth); }
+  if (ok) iniciar();
+});
+
+// ---------- dados ----------
+let pedidos = [], lugares = {}, filtro = "pendente";
+function iniciar() {
+  unsub.push(onSnapshot(query(collection(db, "pedidos"), orderBy("criado", "desc")), s => {
+    pedidos = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTudo();
+  }));
+  unsub.push(onSnapshot(collection(db, "lugares"), s => {
+    lugares = {}; s.forEach(d => lugares[d.id] = d.data()); renderTudo();
+  }));
+}
+const estadoPed = p => p.estado === "pendente" && (p.expira?.toMillis?.() || 0) < Date.now() ? "expirado" : p.estado;
+const fmtData = t => t?.toDate ? t.toDate().toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const telZap = t => { let n = String(t).replace(/\D/g, ""); if (n.length === 9) n = "351" + n; return n; };
+
+function renderTudo() { renderKpis(); renderLista(); renderMapa(); }
+
+function renderKpis() {
+  const st = {}; for (const id in lugares) st[id] = estadoEfetivo(lugares[id]);
+  const v = Object.values(st);
+  const pagos = pedidos.filter(p => p.estado === "pago");
+  $("kpis").innerHTML = `
+    <div class="kpi"><b>${v.filter(x => x === "pago").length}</b><span>lugares vendidos</span></div>
+    <div class="kpi"><b>${v.filter(x => x === "reservado").length}</b><span>reservados</span></div>
+    <div class="kpi"><b>${v.filter(x => x === "livre").length}</b><span>livres</span></div>
+    <div class="kpi"><b>${euro(pagos.reduce((a, p) => a + precoDosLugares(p.lugares), 0))}</b><span>recebido</span></div>`;
+}
+
+document.querySelectorAll("#filtros button").forEach(b => b.onclick = () => {
+  filtro = b.dataset.f; document.querySelectorAll("#filtros button").forEach(x => x.classList.toggle("on", x === b)); renderLista();
+});
+$("busca").oninput = renderLista;
+
+function renderLista() {
+  const q = $("busca").value.trim().toLowerCase();
+  const l = pedidos.filter(p => (filtro === "todos" || estadoPed(p) === filtro) &&
+    (!q || [p.nome, p.codigo, p.telefone, p.email].some(x => String(x || "").toLowerCase().includes(q))));
+  $("lista").innerHTML = l.length ? "" : `<p class="nota centro">Nada por aqui.</p>`;
+  l.forEach(p => {
+    const est = estadoPed(p), certo = precoDosLugares(p.lugares);
+    const d = document.createElement("div"); d.className = "ped";
+    d.innerHTML = `<div class="top"><div><b>${esc(p.nome)}</b> <span class="nota">· ${p.codigo}</span></div><span class="tag ${est}">${est}</span></div>
+      <div>${descreverLugares(p.lugares)} · <b>${euro(certo)}</b>${p.total !== certo ? ` <span class="erro" style="padding:1px 6px">valor indicado ${euro(p.total)}</span>` : ""}</div>
+      <div class="nota">${esc(p.telefone)} · ${esc(p.email)} · ${fmtData(p.criado)}${p.origem === "local" ? " · venda no local" : ""}${p.checkin ? " · ✅ entrou" : ""}</div>
+      ${p.nota ? `<div class="nota">📝 ${esc(p.nota)}</div>` : ""}
+      <div class="acoes"></div>`;
+    const ac = d.querySelector(".acoes");
+    const bt = (txt, cls, fn) => { const b = document.createElement("button"); b.className = "btn peq " + cls; b.textContent = txt; b.onclick = fn; ac.appendChild(b); return b; };
+    if (est === "pendente" || est === "expirado") {
+      bt("Confirmar pagamento", "", () => confirmar(p));
+      bt("Cancelar", "sec", () => cancelar(p));
+    }
+    if (est === "pago") {
+      bt("Reenviar e-mail", "sec", () => enviarEmail(p).then(r => alert(r)));
+      const a = document.createElement("a"); a.className = "btn peq verde"; a.target = "_blank"; a.textContent = "WhatsApp";
+      a.href = zapBilhete(p); ac.appendChild(a);
+      bt("Cancelar", "sec", () => cancelar(p));
+    }
+    const a2 = document.createElement("a"); a2.className = "btn peq sec"; a2.target = "_blank"; a2.textContent = "Ver bilhete";
+    a2.href = linkBilhete(p.bilhete); ac.appendChild(a2);
+    $("lista").appendChild(d);
+  });
+}
+
+function zapBilhete(p) {
+  const msg = `Olá ${p.nome.split(" ")[0]}! O seu pagamento foi confirmado 🎉\n${EVENTO.nome} — ${EVENTO.data}, abertura ${EVENTO.abertura}.\n` +
+    `${descreverLugares(p.lugares)}\nO seu bilhete (apresente o QR Code na receção):\n${linkBilhete(p.bilhete)}`;
+  return `https://wa.me/${telZap(p.telefone)}?text=${encodeURIComponent(msg)}`;
+}
+
+// ---------- ações ----------
+async function confirmar(p) {
+  if (!confirm(`Confirmar o pagamento de ${euro(precoDosLugares(p.lugares))} de ${p.nome}?`)) return;
+  try {
+    await runTransaction(db, async tx => {
+      const refs = p.lugares.map(id => doc(db, "lugares", id));
+      const snaps = await Promise.all(refs.map(r => tx.get(r)));
+      const perdidos = snaps.filter(s => s.data()?.pedido !== p.id && estadoEfetivo(s.data()) !== "livre");
+      if (perdidos.length) throw new Error("Os lugares " + perdidos.map(s => `mesa ${mesaDe(s.id)}/${lugarDe(s.id)}`).join(", ") +
+        " já foram reservados por outra pessoa. Combine outra mesa com o cliente ou devolva o valor.");
+      refs.forEach(r => tx.update(r, { estado: "pago", pedido: p.id, expira: deleteField() }));
+      tx.update(doc(db, "pedidos", p.id), { estado: "pago", pagoEm: serverTimestamp(), expira: deleteField() });
+      tx.update(doc(db, "bilhetes", p.bilhete), { estado: "pago", expira: deleteField() });
+    });
+  } catch (e) { return alert(e.message || "Erro ao confirmar."); }
+  $("okTxt").textContent = `${p.nome} · ${descreverLugares(p.lugares)}`;
+  $("okZap").href = zapBilhete(p);
+  $("okMail").textContent = "A enviar e-mail…";
+  $("mOk").classList.add("on");
+  $("okMail").textContent = await enviarEmail(p);
+}
+
+async function enviarEmail(p) {
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const r = await fetch("/.netlify/functions/enviar-bilhete", { method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ pedido: p.id, link: linkBilhete(p.bilhete) }) });
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? `E-mail enviado para ${p.email}.` : `E-mail não enviado (${j.erro || r.status}). Use o WhatsApp.`;
+  } catch { return "E-mail não enviado. Use o WhatsApp."; }
+}
+
+async function cancelar(p) {
+  if (!confirm(`Cancelar a reserva ${p.codigo} de ${p.nome} e libertar os lugares?`)) return;
+  try {
+    await runTransaction(db, async tx => {
+      const refs = p.lugares.map(id => doc(db, "lugares", id));
+      const snaps = await Promise.all(refs.map(r => tx.get(r)));
+      snaps.forEach((s, i) => { if (s.data()?.pedido === p.id) tx.update(refs[i], { estado: "livre", pedido: deleteField(), expira: deleteField() }); });
+      tx.update(doc(db, "pedidos", p.id), { estado: "cancelado", canceladoEm: serverTimestamp() });
+      tx.update(doc(db, "bilhetes", p.bilhete), { estado: "cancelado" });
+    });
+  } catch (e) { alert("Erro ao cancelar: " + e.message); }
+}
+
+// ---------- mapa ----------
+let mesaSel = null;
+function renderMapa() {
+  const st = {}; for (const id in lugares) st[id] = estadoEfetivo(lugares[id]);
+  desenharMapa($("mapa"), { estados: st, destaque: mesaSel, onMesa: m => { mesaSel = m; renderMapa(); } });
+  if (!mesaSel) { $("detMesa").innerHTML = ""; return; }
+  const porPed = Object.fromEntries(pedidos.map(p => [p.id, p]));
+  let html = `<div class="card"><h3 style="margin-top:0">Mesa ${mesaSel}</h3>`;
+  for (let l = 1; l <= LUGARES_POR_MESA; l++) {
+    const id = idLugar(mesaSel, l), s = st[id] || "livre", p = porPed[lugares[id]?.pedido];
+    html += `<div class="lugarlinha">${s === "livre" ? `<input type="checkbox" class="ckLugar" value="${id}">` : `<span style="width:16px"></span>`}
+      Cadeira ${l} — <span class="tag ${s === "livre" ? "" : s === "pago" ? "pago" : "pendente"}">${s}</span>
+      ${s !== "livre" && p ? `<span>${esc(p.nome)} <span class="nota">(${p.codigo})</span></span>` : ""}</div>`;
+  }
+  html += `<div id="vendaLocal" style="margin-top:10px"><p class="nota">Venda no local (pagamento já recebido): marque as cadeiras livres.</p>
+    <label>Nome</label><input id="vlNome"><label>Telemóvel (opcional)</label><input id="vlTel" type="tel">
+    <button class="btn" id="btVL" style="margin-top:10px">Registar venda paga</button></div></div>`;
+  $("detMesa").innerHTML = html;
+  $("btVL").onclick = vendaLocal;
+}
+
+async function vendaLocal() {
+  const ids = [...document.querySelectorAll(".ckLugar:checked")].map(c => c.value);
+  const nome = $("vlNome").value.trim();
+  if (!ids.length || !nome) return alert("Marque as cadeiras e escreva o nome.");
+  const total = precoDosLugares(ids);
+  if (!confirm(`Registar ${descreverLugares(ids)} para ${nome} — ${euro(total)} já recebidos?`)) return;
+  const pedRef = doc(collection(db, "pedidos")), bilRef = doc(collection(db, "bilhetes"));
+  const codigo = pedRef.id.slice(0, 6).toUpperCase();
+  try {
+    await runTransaction(db, async tx => {
+      const snaps = await Promise.all(ids.map(id => tx.get(doc(db, "lugares", id))));
+      if (snaps.some(s => estadoEfetivo(s.data()) !== "livre")) throw new Error("Um dos lugares acabou de ser reservado.");
+      tx.set(pedRef, { codigo, nome, telefone: $("vlTel").value.trim(), email: "", nota: "", lugares: ids, total, estado: "pago",
+        criado: serverTimestamp(), pagoEm: serverTimestamp(), bilhete: bilRef.id, origem: "local" });
+      tx.set(bilRef, { pedido: pedRef.id, codigo, nome: nome.split(/\s+/)[0], lugares: ids, total, estado: "pago" });
+      ids.forEach(id => tx.update(doc(db, "lugares", id), { estado: "pago", pedido: pedRef.id }));
+    });
+    alert(`Venda registada. Código ${codigo}.`);
+  } catch (e) { alert(e.message); }
+}
+
+// ---------- entrada (check-in) ----------
+let leitor = null;
+$("btLer").onclick = async () => {
+  if (leitor) { await leitor.stop().catch(() => {}); leitor = null; $("btLer").textContent = "Ler QR Code"; return; }
+  leitor = new Html5Qrcode("leitor");
+  $("btLer").textContent = "Parar câmara";
+  try {
+    await leitor.start({ facingMode: "environment" }, { fps: 10, qrbox: 230 }, async txt => {
+      const id = new URL(txt, location.href).searchParams.get("id");
+      await leitor.stop().catch(() => {}); leitor = null; $("btLer").textContent = "Ler QR Code";
+      mostrarBilhete(id);
+    });
+  } catch { leitor = null; $("btLer").textContent = "Ler QR Code"; alert("Não foi possível abrir a câmara."); }
+};
+$("btCod").onclick = () => {
+  const c = $("codManual").value.trim().toUpperCase();
+  const p = pedidos.find(x => x.codigo === c);
+  p ? mostrarBilhete(p.bilhete) : ($("resCheckin").innerHTML = `<div class="erro">Código não encontrado.</div>`);
+};
+async function mostrarBilhete(bid) {
+  const box = $("resCheckin");
+  const s = bid && await getDoc(doc(db, "bilhetes", bid)).catch(() => null);
+  if (!s || !s.exists()) { box.innerHTML = `<div class="erro">QR Code inválido.</div>`; return; }
+  const b = s.data(), p = pedidos.find(x => x.id === b.pedido) || {};
+  const cls = b.estado !== "pago" ? "erro" : b.checkin ? "aviso" : "ok";
+  const titulo = b.estado !== "pago" ? `NÃO PAGO (${b.estado})` : b.checkin ? "JÁ ENTROU" : "VÁLIDO";
+  box.innerHTML = `<div class="${cls}" style="margin-top:12px"><div class="grande" style="font-size:1.5rem">${titulo}</div>
+    <b>${esc(p.nome || b.nome)}</b> · ${b.codigo}<br>${descreverLugares(b.lugares)} · ${b.lugares.length} pessoa(s)
+    ${b.checkin ? `<br>Entrada registada às ${fmtData(b.checkin)}` : ""}
+    ${b.estado === "pago" && !b.checkin ? `<button class="btn" id="btEntrar" style="margin-top:10px">Registar entrada</button>` : ""}</div>`;
+  const be = $("btEntrar");
+  if (be) be.onclick = async () => {
+    const batch = writeBatch(db);
+    batch.update(doc(db, "bilhetes", bid), { checkin: serverTimestamp() });
+    batch.update(doc(db, "pedidos", b.pedido), { checkin: serverTimestamp() });
+    await batch.commit(); mostrarBilhete(bid);
+  };
+}
+
+// ---------- mais ----------
+$("btInit").onclick = async () => {
+  const exist = await getDocs(collection(db, "lugares"));
+  const ja = new Set(exist.docs.map(d => d.id));
+  const batch = writeBatch(db); let n = 0;
+  for (let m = 1; m <= TOTAL_MESAS; m++) for (let l = 1; l <= LUGARES_POR_MESA; l++) {
+    const id = idLugar(m, l); if (!ja.has(id)) { batch.set(doc(db, "lugares", id), { mesa: m, lugar: l, estado: "livre" }); n++; }
+  }
+  if (n) await batch.commit();
+  $("initRes").textContent = n ? `${n} lugares criados.` : "A sala já estava configurada.";
+};
+
+$("btCsv").onclick = () => {
+  const cab = ["Código", "Estado", "Nome", "Telemóvel", "E-mail", "Lugares", "Pessoas", "Valor (€)", "Criado", "Origem", "Entrou", "Observações"];
+  const linhas = pedidos.map(p => [p.codigo, estadoPed(p), p.nome, p.telefone, p.email, descreverLugares(p.lugares), p.lugares.length,
+    String(precoDosLugares(p.lugares)).replace(".", ","), fmtData(p.criado), p.origem || "online", p.checkin ? "sim" : "", p.nota || ""]);
+  const csv = "﻿" + [cab, ...linhas].map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "bilhetes-ayres.csv"; a.click();
+};
+
+// ---------- abas e modais ----------
+document.querySelectorAll(".abas button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".abas button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".aba").forEach(a => a.classList.toggle("oculto", a.id !== b.dataset.aba));
+});
+document.querySelectorAll("[data-fechar]").forEach(b => b.onclick = () => b.closest(".modal").classList.remove("on"));
+</script>
+</body>
+</html>

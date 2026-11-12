@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Estrelas de Natal — Bilhetes · AYRE'S &amp; POSAP</title>
+<meta name="description" content="Estrelas de Natal, Espetáculo de Final de Ano da AYRE'S — 13 de dezembro, POSAP, Sintra. Reserve a sua mesa ou cadeira.">
+<meta property="og:title" content="Estrelas de Natal — Espetáculo de Final de Ano">
+<meta property="og:description" content="13 de dezembro · POSAP, Sintra · Reserve a sua mesa">
+<meta property="og:image" content="img/og.jpg">
+<meta name="theme-color" content="#0a005b">
+<link rel="icon" href="img/ayres.jpg">
+<link rel="stylesheet" href="estilo.css">
+<style id="cssmapa"></style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topo">
+    <img src="img/cartaz.jpg" alt="Cartaz Estrelas de Natal — Espetáculo de Final de Ano" class="cartaz">
+    <h1 id="tNome">Estrelas de Natal</h1>
+    <p class="sub" id="tSub"></p>
+    <p class="sub" id="tOrg" style="font-size:.9rem"></p>
+    <div class="logos" style="margin-top:12px"><img src="img/ayres.jpg" alt="AYRE'S Ginástica &amp; Danças Aéreas"><img src="img/posap.jpg" alt="POSAP Centro de Treinamento"></div>
+    <a href="#secMapa" class="btn" style="display:block;text-decoration:none;margin-top:16px">Escolher mesa</a>
+  </header>
+
+  <section class="card info" id="info"></section>
+
+  <section class="card">
+    <div class="precos">
+      <div class="preco"><div class="v" id="pMesa"></div><div><b>Mesa inteira</b></div><small>4 pessoas, só para o seu grupo</small>
+        <p class="nota" id="incMesa" style="margin:6px 0 0"></p></div>
+      <div class="preco"><div class="v" id="pCad"></div><div><b>Por cadeira</b></div><small>por pessoa · mesa partilhada com outras famílias</small>
+        <p class="nota" id="incCad" style="margin:6px 0 0"></p></div>
+    </div>
+  </section>
+
+  <section class="card" id="secProg">
+    <h2 style="margin:0 0 4px;color:var(--ouro2);font-size:1.2rem">Programação</h2>
+    <p class="nota" style="margin:0 0 8px">A história da Teia, que procura a magia do Natal, em <span id="nNum"></span> números.</p>
+    <ol class="prog" id="prog"></ol>
+  </section>
+
+  <section class="card" id="secMapa">
+    <p class="centro" style="margin:0 0 6px"><b>Toque numa mesa para escolher</b></p>
+    <div class="legenda">
+      <span><i style="background:var(--verde)"></i>Livre</span>
+      <span><i style="background:var(--amarelo)"></i>Reservado</span>
+      <span><i style="background:var(--verm)"></i>Vendido</span>
+      <span><i style="background:#fff;border:2px solid var(--ouro)"></i>A sua escolha</span>
+    </div>
+    <svg class="mapa" id="mapa" role="img" aria-label="Planta do salão com 19 mesas"></svg>
+    <div class="legenda" style="margin-top:4px">
+      <span><i style="background:#3b6cff"></i>Pole</span>
+      <span><i style="background:#f07a1e"></i>Hoop</span>
+      <span><i style="background:#ffc61a"></i>Flying Pole</span>
+    </div>
+    <p class="nota centro" id="carregando">A carregar disponibilidade…</p>
+  </section>
+
+  <footer>
+    <span id="rodape"></span><br>
+    Dúvidas: <a id="lnkZap" target="_blank" rel="noopener">WhatsApp</a> · <a id="lnkMail"></a>
+  </footer>
+</div>
+
+<!-- barra do carrinho -->
+<div class="barra" id="barra"><div class="in">
+  <div class="resumo"><div id="cResumo"></div><b id="cTotal"></b></div>
+  <button class="btn sec peq" id="btLimpar">Limpar</button>
+  <button class="btn" id="btContinuar">Continuar</button>
+</div></div>
+
+<!-- escolha da mesa -->
+<div class="modal" id="mMesa"><div class="folha">
+  <h2 id="mmTitulo"></h2>
+  <p class="nota" id="mmLivres"></p>
+  <div id="mmOpcoes"></div>
+  <button class="btn sec" style="margin-top:12px" data-fechar>Fechar</button>
+</div></div>
+
+<!-- dados do comprador -->
+<div class="modal" id="mDados"><div class="folha">
+  <h2>Os seus dados</h2>
+  <p class="nota" id="mdResumo"></p>
+  <form id="fDados" autocomplete="on">
+    <label for="fNome">Nome completo</label>
+    <input id="fNome" name="name" autocomplete="name" required minlength="3" maxlength="80">
+    <label for="fTel">Telemóvel</label>
+    <input id="fTel" name="tel" type="tel" autocomplete="tel" inputmode="tel" required placeholder="9xx xxx xxx" maxlength="20">
+    <label for="fEmail">E-mail (para receber o bilhete)</label>
+    <input id="fEmail" name="email" type="email" autocomplete="email" required maxlength="120">
+    <label for="fNota">Observações (opcional)</label>
+    <textarea id="fNota" rows="2" maxlength="300" placeholder="Ex.: nome da aluna, restrição alimentar…"></textarea>
+    <p class="nota">Os dados são usados apenas para gerir a sua reserva e enviar o bilhete.</p>
+    <div id="mdErro" class="erro oculto"></div>
+    <div class="linha" style="margin-top:12px">
+      <button type="button" class="btn sec" data-fechar>Voltar</button>
+      <button class="btn" id="btReservar">Reservar</button>
+    </div>
+  </form>
+</div></div>
+
+<!-- pagamento -->
+<div class="modal" id="mPag"><div class="folha centro">
+  <h2>Reserva feita!</h2>
+  <p class="nota">Código da reserva</p>
+  <div class="grande" id="pgCodigo"></div>
+  <p id="pgLugares"></p>
+  <div class="card" style="margin:12px 0">
+    <p style="margin:0">Envie por <b>MB WAY</b></p>
+    <div class="grande" id="pgValor"></div>
+    <p style="margin:4px 0">para o número</p>
+    <div class="grande" id="pgMbway" style="font-size:1.6rem"></div>
+    <button class="btn sec peq" id="btCopiar" style="margin-top:6px">Copiar número</button>
+    <p class="nota" style="margin-top:10px">Na mensagem do MB WAY escreva o código <b id="pgCodigo2"></b>.</p>
+  </div>
+  <div class="aviso" id="pgTempo"></div>
+  <p class="nota">Depois de pagar, envie o comprovativo. Quando o pagamento for confirmado, recebe o bilhete com QR Code por e-mail.</p>
+  <a class="btn verde" id="btZap" target="_blank" rel="noopener" style="display:block;text-decoration:none;margin:10px 0">Enviar comprovativo por WhatsApp</a>
+  <a class="btn sec" id="btVerBilhete" style="display:block;text-decoration:none">Ver o estado da reserva</a>
+  <button class="btn sec" style="margin-top:10px" data-fechar>Fechar</button>
+</div></div>
+
+<script type="module">
+import { db, collection, doc, onSnapshot, runTransaction, serverTimestamp, Timestamp } from "./fb.js";
+import { EVENTO, PRECO_MESA, PRECO_CADEIRA, LUGARES_POR_MESA, TOTAL_MESAS, MBWAY, WHATSAPP, EMAIL_CONTACTO,
+  MINUTOS_RESERVA, precoDosLugares, idLugar, euro, descreverLugares, PROGRAMA, MOSTRAR_ALUNAS } from "./config.js";
+import { desenharMapa, estadoEfetivo, CSS_MAPA } from "./mapa.js";
+
+const $ = id => document.getElementById(id);
+$("cssmapa").textContent = CSS_MAPA;
+
+// ---------- textos ----------
+$("tNome").textContent = EVENTO.nome;
+$("tSub").textContent = EVENTO.subtitulo;
+$("tOrg").textContent = EVENTO.organizacao;
+$("info").innerHTML = `
+  <div><b>Data</b>${EVENTO.data}</div>
+  <div><b>Horário</b>Abertura ${EVENTO.abertura} · Início ${EVENTO.inicio}</div>
+  <div style="grid-column:1/-1"><b>Local</b>${EVENTO.local}<br><span class="nota">${EVENTO.morada}</span></div>`;
+$("pMesa").textContent = euro(PRECO_MESA);
+$("pCad").textContent = euro(PRECO_CADEIRA);
+$("nNum").textContent = PROGRAMA.length;
+$("prog").innerHTML = PROGRAMA.map((n, i) =>
+  `${n.parte && i > 0 ? `<li class="sep" aria-hidden="true">✦</li>` : ""}
+   <li class="${n.final ? "final" : ""}"><span class="n">${i + 1}</span><span><b>${n.tema}</b><br>
+   <span class="nota">${n.mod}${MOSTRAR_ALUNAS && n.alunas ? " · " + n.alunas : ""}</span></span></li>`).join("");
+$("incMesa").textContent = EVENTO.incluiMesa;
+$("incCad").textContent = EVENTO.incluiCadeira;
+$("rodape").textContent = EVENTO.organizacao;
+$("lnkZap").href = `https://wa.me/${WHATSAPP}`;
+$("lnkMail").href = `mailto:${EMAIL_CONTACTO}`; $("lnkMail").textContent = EMAIL_CONTACTO;
+
+// ---------- estado ----------
+let docs = {};                 // id -> dados do Firestore
+const carrinho = new Set();    // ids de lugares escolhidos
+let mesaAberta = null;
+
+const estados = () => { const o = {}; for (const id in docs) o[id] = estadoEfetivo(docs[id]); return o; };
+const livresDaMesa = m => { const st = estados(), r = [];
+  for (let l = 1; l <= LUGARES_POR_MESA; l++) { const id = idLugar(m, l); if ((st[id] || "livre") === "livre" && !carrinho.has(id)) r.push(id); }
+  return r; };
+const noCarrinho = m => [...carrinho].filter(id => id.startsWith(idLugar(m, 1).slice(0, 3)));
+
+function render() {
+  desenharMapa($("mapa"), { estados: estados(), selecionados: carrinho, onMesa: abrirMesa });
+  const ids = [...carrinho];
+  $("barra").style.display = ids.length ? "block" : "none";
+  $("cResumo").textContent = descreverLugares(ids);
+  $("cTotal").textContent = euro(precoDosLugares(ids));
+}
+
+onSnapshot(collection(db, "lugares"), snap => {
+  docs = {}; snap.forEach(d => docs[d.id] = d.data());
+  $("carregando").classList.add("oculto");
+  // retira do carrinho o que entretanto foi ocupado
+  const st = estados(); for (const id of [...carrinho]) if (st[id] && st[id] !== "livre") carrinho.delete(id);
+  render(); if (mesaAberta) abrirMesa(mesaAberta);
+}, err => { $("carregando").textContent = "Não foi possível carregar a disponibilidade. Atualize a página."; console.error(err); });
+setInterval(render, 30000); // reservas que expiram voltam a aparecer livres
+
+// ---------- escolher mesa ----------
+function abrirMesa(m) {
+  mesaAberta = m;
+  const livres = livresDaMesa(m), meus = noCarrinho(m);
+  $("mmTitulo").textContent = `Mesa ${m}`;
+  const ops = $("mmOpcoes"); ops.innerHTML = "";
+  if (meus.length) {
+    $("mmLivres").textContent = `Já escolheu ${meus.length === LUGARES_POR_MESA ? "a mesa inteira" : meus.length + " cadeira(s)"} nesta mesa.`;
+    const b = document.createElement("button"); b.className = "btn verm"; b.textContent = "Retirar esta mesa da escolha";
+    b.onclick = () => { meus.forEach(id => carrinho.delete(id)); fechar(); render(); };
+    ops.appendChild(b);
+    if (!livres.length) return abrirModal("mMesa");
+  } else if (!livres.length) {
+    $("mmLivres").textContent = "Esta mesa já está esgotada. Escolha outra.";
+    return abrirModal("mMesa");
+  } else {
+    $("mmLivres").textContent = livres.length === LUGARES_POR_MESA ? "Mesa totalmente livre." :
+      `${livres.length} cadeira${livres.length > 1 ? "s" : ""} livre${livres.length > 1 ? "s" : ""} (mesa partilhada).`;
+  }
+  if (livres.length === LUGARES_POR_MESA) {
+    const d = document.createElement("div"); d.className = "opcao";
+    d.innerHTML = `<b>Mesa inteira</b> — ${LUGARES_POR_MESA} pessoas<div class="grande" style="font-size:1.4rem">${euro(PRECO_MESA)}</div>`;
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Escolher a mesa inteira";
+    b.onclick = () => { livres.forEach(id => carrinho.add(id)); fechar(); render(); };
+    d.appendChild(b); ops.appendChild(d);
+  }
+  const max = Math.min(livres.length, LUGARES_POR_MESA - 1);
+  if (max >= 1) {
+    let n = 1;
+    const d = document.createElement("div"); d.className = "opcao";
+    d.innerHTML = `<b>Cadeiras avulsas</b> — ${euro(PRECO_CADEIRA)} por pessoa<br><span class="nota">Partilha a mesa com outras famílias.</span>
+      <div class="qtd"><button type="button" aria-label="menos">−</button><span>1</span><button type="button" aria-label="mais">+</button></div>`;
+    const [menos, mais] = d.querySelectorAll(".qtd button"), span = d.querySelector(".qtd span");
+    const b = document.createElement("button"); b.className = "btn";
+    const upd = () => { span.textContent = n; b.textContent = `Escolher ${n} cadeira${n > 1 ? "s" : ""} · ${euro(n * PRECO_CADEIRA)}`; };
+    menos.onclick = () => { if (n > 1) { n--; upd(); } }; mais.onclick = () => { if (n < max) { n++; upd(); } };
+    b.onclick = () => { livres.slice(0, n).forEach(id => carrinho.add(id)); fechar(); render(); };
+    upd(); d.appendChild(b); ops.appendChild(d);
+  }
+  abrirModal("mMesa");
+}
+
+// ---------- modais ----------
+function abrirModal(id) { document.querySelectorAll(".modal").forEach(x => x.classList.remove("on")); $(id).classList.add("on"); }
+function fechar() { document.querySelectorAll(".modal").forEach(x => x.classList.remove("on")); mesaAberta = null; }
+document.querySelectorAll("[data-fechar]").forEach(b => b.onclick = fechar);
+document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if (e.target === m) fechar(); }));
+
+$("btLimpar").onclick = () => { carrinho.clear(); render(); };
+$("btContinuar").onclick = () => {
+  const ids = [...carrinho];
+  $("mdResumo").textContent = `${descreverLugares(ids)} · Total ${euro(precoDosLugares(ids))}`;
+  $("mdErro").classList.add("oculto");
+  abrirModal("mDados");
+};
+
+// ---------- reservar ----------
+$("fDados").onsubmit = async e => {
+  e.preventDefault();
+  const bt = $("btReservar"); bt.disabled = true; bt.textContent = "A reservar…";
+  const ids = [...carrinho].sort();
+  const pedRef = doc(collection(db, "pedidos"));      // dados pessoais — só a organização lê
+  const bilRef = doc(collection(db, "bilhetes"));     // id secreto do bilhete (vai no link e no QR)
+  const codigo = pedRef.id.slice(0, 6).toUpperCase();
+  const expira = Timestamp.fromMillis(Date.now() + MINUTOS_RESERVA * 60000);
+  const total = precoDosLugares(ids);
+  try {
+    await runTransaction(db, async tx => {
+      const snaps = await Promise.all(ids.map(id => tx.get(doc(db, "lugares", id))));
+      snaps.forEach(s => {
+        if (!s.exists()) throw new Error("Lugar inexistente — a sala ainda não foi configurada.");
+        if (estadoEfetivo(s.data()) !== "livre") throw new Error("ocupado");
+      });
+      tx.set(pedRef, {
+        codigo, nome: $("fNome").value.trim(), telefone: $("fTel").value.trim(), email: $("fEmail").value.trim().toLowerCase(),
+        nota: $("fNota").value.trim(), lugares: ids, total, estado: "pendente", criado: serverTimestamp(), expira,
+        bilhete: bilRef.id
+      });
+      tx.set(bilRef, { pedido: pedRef.id, codigo, nome: $("fNome").value.trim().split(/\s+/)[0], lugares: ids, total,
+        estado: "pendente", expira });
+      ids.forEach(id => tx.update(doc(db, "lugares", id), { estado: "reservado", pedido: pedRef.id, expira }));
+    });
+    const info = { id: bilRef.id, codigo, total, ids, expira: expira.toMillis() };
+    try { localStorage.setItem("ayres_ultimo_pedido", JSON.stringify(info)); } catch {}
+    carrinho.clear(); render(); mostrarPagamento(info);
+  } catch (err) {
+    console.error(err);
+    $("mdErro").textContent = err.message === "ocupado"
+      ? "Alguém acabou de reservar um destes lugares. Volte ao mapa e escolha de novo."
+      : "Não foi possível concluir a reserva. Verifique a ligação e tente novamente.";
+    $("mdErro").classList.remove("oculto");
+  } finally { bt.disabled = false; bt.textContent = "Reservar"; }
+};
+
+let timer;
+function mostrarPagamento(p) {
+  $("pgCodigo").textContent = $("pgCodigo2").textContent = p.codigo;
+  $("pgLugares").textContent = descreverLugares(p.ids);
+  $("pgValor").textContent = euro(p.total);
+  $("pgMbway").textContent = MBWAY;
+  const msg = `Olá! Segue o comprovativo do MB WAY da reserva ${p.codigo} (${descreverLugares(p.ids)}) — ${euro(p.total)}.`;
+  $("btZap").href = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  $("btVerBilhete").href = `bilhete.html?id=${p.id}`;
+  clearInterval(timer);
+  const tick = () => {
+    const s = Math.max(0, Math.round((p.expira - Date.now()) / 1000));
+    $("pgTempo").textContent = s > 0
+      ? `Os lugares ficam guardados durante ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} à espera do pagamento.`
+      : "O tempo da reserva terminou. Se já pagou, envie o comprovativo por WhatsApp.";
+  };
+  tick(); timer = setInterval(tick, 1000);
+  abrirModal("mPag");
+}
+$("btCopiar").onclick = async () => {
+  try { await navigator.clipboard.writeText(MBWAY.replace(/\s/g, "")); $("btCopiar").textContent = "Copiado ✓"; } catch {}
+};
+
+// reabrir a última reserva ainda dentro do prazo
+try {
+  const u = JSON.parse(localStorage.getItem("ayres_ultimo_pedido") || "null");
+  if (u && u.expira > Date.now()) mostrarPagamento(u);
+} catch {}
+</script>
+</body>
+</html>

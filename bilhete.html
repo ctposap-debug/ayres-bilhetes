@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>O seu bilhete — AYRE'S &amp; POSAP</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a005b">
+<link rel="icon" href="img/ayres.jpg">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  .bilhete{background:linear-gradient(160deg,#1a1490,#0a005b);border:2px solid var(--ouro);border-radius:18px;padding:20px;text-align:center}
+  #qr{background:#fff;padding:14px;border-radius:12px;display:inline-block;margin:12px 0}
+  #qr img,#qr canvas{display:block}
+  .dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;margin:14px auto 0;max-width:360px;font-size:.95rem}
+  .dl dt{color:var(--txt2)}.dl dd{margin:0;font-weight:600}
+  @media print{body{background:#fff}.naoimprimir{display:none}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="wrap" style="padding-bottom:40px">
+  <header class="topo">
+    <div class="logos"><img src="img/ayres.jpg" alt="AYRE'S"><img src="img/posap.jpg" alt="POSAP"></div>
+  </header>
+  <div id="conteudo" class="card centro">A carregar…</div>
+  <p class="centro naoimprimir"><a href="./">Voltar à página de bilhetes</a></p>
+</div>
+<script type="module">
+import { db, doc, onSnapshot } from "./fb.js";
+import { EVENTO, MBWAY, WHATSAPP, euro, descreverLugares, LUGARES_POR_MESA } from "./config.js";
+
+const id = new URLSearchParams(location.search).get("id");
+const box = document.getElementById("conteudo");
+if (!id) box.textContent = "Link de bilhete inválido.";
+else onSnapshot(doc(db, "bilhetes", id), s => {
+  if (!s.exists()) { box.textContent = "Bilhete não encontrado."; return; }
+  const b = s.data();
+  const pessoas = b.lugares.length;
+  const exp = b.expira?.toMillis?.() || 0;
+  const estado = b.estado === "pendente" && exp < Date.now() ? "expirado" : b.estado;
+  const det = `<dl class="dl">
+      <dt>Código</dt><dd>${b.codigo}</dd>
+      <dt>Nome</dt><dd>${esc(b.nome)}</dd>
+      <dt>Lugares</dt><dd>${descreverLugares(b.lugares)}</dd>
+      <dt>Pessoas</dt><dd>${pessoas}</dd>
+      <dt>Valor</dt><dd>${euro(b.total)}</dd>
+      <dt>Data</dt><dd>${EVENTO.data}</dd>
+      <dt>Horário</dt><dd>Abertura ${EVENTO.abertura} · Início ${EVENTO.inicio}</dd>
+      <dt>Local</dt><dd>${EVENTO.local}<br><span class="nota">${EVENTO.morada}</span></dd>
+    </dl>`;
+  if (estado === "pago") {
+    box.className = "bilhete";
+    box.innerHTML = `<span class="tag pago">PAGO</span>
+      <h1 style="margin:10px 0 0">${EVENTO.nome}</h1>
+      <div id="qr"></div>
+      <p class="nota" style="margin:0">Apresente este QR Code na receção. Vale para ${pessoas} pessoa${pessoas > 1 ? "s" : ""}.</p>
+      ${b.checkin ? `<p class="aviso" style="margin-top:10px">Entrada já registada.</p>` : ""}
+      ${det}
+      <button class="btn sec naoimprimir" style="margin-top:16px" onclick="print()">Guardar / imprimir</button>`;
+    new QRCode(document.getElementById("qr"), { text: location.origin + location.pathname + "?id=" + id, width: 220, height: 220,
+      correctLevel: QRCode.CorrectLevel.M });
+  } else if (estado === "pendente") {
+    const msg = `Olá! Segue o comprovativo do MB WAY da reserva ${b.codigo} — ${euro(b.total)}.`;
+    box.innerHTML = `<span class="tag pendente">A AGUARDAR PAGAMENTO</span>
+      <p>Envie <b>${euro(b.total)}</b> por MB WAY para <b>${MBWAY}</b> com o código <b>${b.codigo}</b> na mensagem.</p>
+      <a class="btn verde" style="display:block;text-decoration:none" target="_blank" rel="noopener"
+        href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}">Enviar comprovativo por WhatsApp</a>
+      <p class="nota">Esta página atualiza sozinha quando o pagamento for confirmado. Guarde este link.</p>${det}`;
+  } else {
+    box.innerHTML = `<span class="tag ${estado}">${estado === "expirado" ? "RESERVA EXPIRADA" : "CANCELADA"}</span>
+      <p>${estado === "expirado" ? "O prazo para pagamento terminou e os lugares foram libertados. Se já pagou, fale connosco." :
+        "Esta reserva foi cancelada."}</p>
+      <a class="btn verde" style="display:block;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}">Falar por WhatsApp</a>${det}`;
+  }
+}, () => box.textContent = "Não foi possível carregar o bilhete.");
+
+function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+</script>
+</body>
+</html>
