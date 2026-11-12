@@ -109,6 +109,7 @@
       </div>
     </div>
   </section>
+  <p class="nota centro" id="versao" style="opacity:.6;font-size:.72rem;margin-top:20px"></p>
 </div>
 
 <!-- confirmação enviada -->
@@ -125,12 +126,13 @@ import { db, auth, collection, doc, onSnapshot, runTransaction, serverTimestamp,
   query, where, orderBy, Timestamp } from "./fb.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { ADMINS, EVENTO, TOTAL_MESAS, LUGARES_POR_MESA, idLugar, euro, descreverLugares, precoDosLugares, mesaDe, lugarDe }
+import { ADMINS, EVENTO, TOTAL_MESAS, LUGARES_POR_MESA, idLugar, euro, descreverLugares, precoDosLugares, mesaDe, lugarDe, VERSAO }
   from "./config.js";
 import { desenharMapa, estadoEfetivo, CSS_MAPA } from "./mapa.js";
 
 const $ = id => document.getElementById(id);
 $("cssmapa").textContent = CSS_MAPA;
+$("versao").textContent = VERSAO;
 const base = location.origin + location.pathname.replace(/admin\.html$/, "");
 const linkBilhete = bid => `${base}bilhete.html?id=${bid}`;
 $("linkVenda").value = base;

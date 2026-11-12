@@ -2,6 +2,9 @@
 //  CONFIGURAÇÃO — tudo o que muda de evento para evento fica aqui
 // =====================================================================
 
+// Versão do site — aumentar a cada atualização publicada
+export const VERSAO = "v1.0.4 · 12/11/2026";
+
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)
 export const FIREBASE = {

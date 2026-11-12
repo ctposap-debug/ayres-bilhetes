@@ -62,6 +62,7 @@
     <span id="rodape"></span><br>
     Dúvidas: <a id="lnkZap" target="_blank" rel="noopener">WhatsApp</a> · <a id="lnkMail"></a>
     <a href="admin.html" class="btn sec peq" style="display:inline-block;text-decoration:none;margin-top:16px">🔒 Área da organização</a>
+    <div id="versao" style="margin-top:12px;opacity:.6;font-size:.72rem"></div>
   </footer>
 </div>
 
@@ -126,7 +127,7 @@
 <script type="module">
 import { db, collection, doc, onSnapshot, runTransaction, serverTimestamp, Timestamp } from "./fb.js";
 import { EVENTO, PRECO_MESA, PRECO_CADEIRA, LUGARES_POR_MESA, TOTAL_MESAS, MBWAY, WHATSAPP, EMAIL_CONTACTO,
-  MINUTOS_RESERVA, precoDosLugares, idLugar, euro, descreverLugares, PROGRAMA, MOSTRAR_ALUNAS } from "./config.js";
+  MINUTOS_RESERVA, precoDosLugares, idLugar, euro, descreverLugares, PROGRAMA, MOSTRAR_ALUNAS, VERSAO } from "./config.js";
 import { desenharMapa, estadoEfetivo, CSS_MAPA } from "./mapa.js";
 
 const $ = id => document.getElementById(id);
@@ -142,6 +143,7 @@ $("info").innerHTML = `
   <div style="grid-column:1/-1"><b>Local</b>${EVENTO.local}<br><span class="nota">${EVENTO.morada}</span></div>`;
 $("pMesa").textContent = euro(PRECO_MESA);
 $("pCad").textContent = euro(PRECO_CADEIRA);
+$("versao").textContent = VERSAO;
 $("nNum").textContent = PROGRAMA.length;
 $("prog").innerHTML = PROGRAMA.map((n, i) =>
   `${n.parte && i > 0 ? `<li class="sep" aria-hidden="true">✦</li>` : ""}
