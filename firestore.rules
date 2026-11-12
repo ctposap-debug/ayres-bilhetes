@@ -19,7 +19,7 @@ service cloud.firestore {
         request.resource.data.estado == 'reservado' &&
         (resource.data.estado == 'livre' || expirou(resource.data)) &&
         request.resource.data.expira is timestamp &&
-        request.resource.data.expira <= request.time + duration.value(35, 'm') &&
+        request.resource.data.expira <= request.time + duration.value(25, 'h') &&
         existsAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)) &&
         id in getAfter(/databases/$(db)/documents/pedidos/$(request.resource.data.pedido)).data.lugares
       );

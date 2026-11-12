@@ -291,7 +291,7 @@ function mostrarPagamento(p) {
   const tick = () => {
     const s = Math.max(0, Math.round((p.expira - Date.now()) / 1000));
     $("pgTempo").textContent = s > 0
-      ? `Os lugares ficam guardados durante ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} à espera do pagamento.`
+      ? `Os lugares ficam guardados durante ${s >= 3600 ? Math.floor(s / 3600) + " h " + String(Math.floor(s % 3600 / 60)).padStart(2, "0") + " min" : Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0")} à espera do pagamento. Pague assim que possível.`
       : "O tempo da reserva terminou. Se já pagou, envie o comprovativo por WhatsApp.";
   };
   tick(); timer = setInterval(tick, 1000);

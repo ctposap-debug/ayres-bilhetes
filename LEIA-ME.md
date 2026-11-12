@@ -3,14 +3,14 @@
 Site estático (Netlify) + Firebase (Firestore e Auth). O pagamento é feito por MB WAY direto para o telemóvel da organização e confirmado à mão no painel.
 
 ## Páginas
-- `index.html` — venda pública: mapa das 19 mesas, mesa inteira (160 €) ou cadeira (45 €), reserva de 30 min
+- `index.html` — venda pública: mapa das 19 mesas, mesa inteira (160 €) ou cadeira (45 €), reserva de 24 h
 - `bilhete.html?id=…` — estado da reserva / bilhete com QR Code (atualiza sozinho quando é confirmado)
 - `admin.html` — painel: confirmar/cancelar, mapa com quem está em cada mesa, venda no local, entrada por QR, exportar CSV
 - `config.js` — **tudo o que se edita**: Firebase, preços, textos, MB WAY, WhatsApp, admins
 
 ## Regras de negócio
 - Preço calculado a partir dos lugares: 4 lugares da mesma mesa = 160 €; senão 45 € por cadeira. O painel recalcula o valor e assinala se o valor gravado não bater certo.
-- Reserva fica 30 min; depois os lugares voltam a aparecer livres. Se a pessoa pagar depois e os lugares ainda estiverem livres, a confirmação funciona; se outra pessoa os tiver ocupado, o painel avisa.
+- Reserva fica 24 h; depois os lugares voltam a aparecer livres. Se a pessoa pagar depois e os lugares ainda estiverem livres, a confirmação funciona; se outra pessoa os tiver ocupado, o painel avisa.
 - Dados pessoais (`pedidos`) só são lidos pela organização. O bilhete público (`bilhetes`) só tem primeiro nome, código e lugares, e só abre com o link secreto.
 
 ## Configuração (uma vez)

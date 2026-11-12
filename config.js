@@ -3,7 +3,7 @@
 // =====================================================================
 
 // Versão do site — aumentar a cada atualização publicada
-export const VERSAO = "v1.0.7 · 12/11/2026";
+export const VERSAO = "v1.0.8 · 12/11/2026";
 
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)
@@ -78,7 +78,8 @@ export const WHATSAPP = "351963680504";  // com indicativo, só números
 export const EMAIL_CONTACTO = "cursos@ayrespolesport.com";
 
 // 6) Tempo que a reserva fica guardada à espera do pagamento (minutos)
-export const MINUTOS_RESERVA = 30;
+//    Se mudar, mudar também o limite em firestore.rules (duration.value(..., 'h'))
+export const MINUTOS_RESERVA = 24 * 60;  // 24 horas
 
 // Regra de preço: 4 lugares da mesma mesa = preço de mesa; caso contrário, por cadeira.
 // É calculada a partir dos lugares, por isso não pode ser manipulada no browser.
