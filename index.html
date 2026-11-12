@@ -21,8 +21,17 @@
     <p class="sub" id="tSub"></p>
     <p class="sub" id="tOrg" style="font-size:.9rem"></p>
     <div class="logos" style="margin-top:12px"><img src="img/ayres.jpg" alt="AYRE'S Ginástica &amp; Danças Aéreas"><img src="img/posap.jpg" alt="POSAP Centro de Treinamento"></div>
-    <a href="#secMapa" class="btn" style="display:block;text-decoration:none;margin-top:16px">Escolher mesa</a>
+    <a href="#secMapa" class="btn" id="btTopo" style="display:block;text-decoration:none;margin-top:16px">Escolher mesa</a>
   </header>
+
+  <section class="card centro oculto" id="secContagem">
+    <p style="margin:0 0 4px;color:var(--ouro2);font-weight:800;letter-spacing:.5px" id="cgTitulo">AS VENDAS ABREM EM</p>
+    <div class="contagem" id="cgRelogio">
+      <div><b id="cgD">0</b><span>dias</span></div><div><b id="cgH">00</b><span>horas</span></div>
+      <div><b id="cgM">00</b><span>min</span></div><div><b id="cgS">00</b><span>seg</span></div>
+    </div>
+    <p class="nota" style="margin:8px 0 0" id="cgQuando"></p>
+  </section>
 
   <section class="card info" id="info"></section>
 
@@ -42,7 +51,7 @@
   </section>
 
   <section class="card" id="secMapa">
-    <p class="centro" style="margin:0 0 6px"><b>Toque numa mesa para escolher</b></p>
+    <p class="centro" style="margin:0 0 6px"><b id="mapaTitulo">Toque numa mesa para escolher</b></p>
     <div class="legenda">
       <span><i style="background:var(--verde)"></i>Livre</span>
       <span><i style="background:var(--amarelo)"></i>Reservado</span>
@@ -185,8 +194,55 @@ onSnapshot(collection(db, "lugares"), snap => {
 }, err => { $("carregando").textContent = "Não foi possível carregar a disponibilidade. Atualize a página."; console.error(err); });
 setInterval(render, 30000); // reservas que expiram voltam a aparecer livres
 
+// ---------- abertura das vendas ----------
+let cfgVendas;            // undefined = a carregar; null = não definida
+let estadoAnterior = "";
+const fmtLisboa = ms => new Date(ms).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "numeric", month: "long",
+  hour: "2-digit", minute: "2-digit" }).replace(",", " às");
+function estadoVendas() {
+  if (cfgVendas === undefined) return "carregando";
+  if (!cfgVendas || !cfgVendas.abertura) return "embreve";
+  if (cfgVendas.fechadas) return "fechadas";
+  return Date.now() >= cfgVendas.abertura.toMillis() ? "abertas" : "contagem";
+}
+function atualizarVendas() {
+  const st = estadoVendas();
+  const fechado = st !== "abertas";
+  $("secContagem").classList.toggle("oculto", st === "abertas" || st === "carregando");
+  $("cgRelogio").classList.toggle("oculto", st !== "contagem");
+  $("mapa").classList.toggle("bloqueado", fechado);
+  if (st === "contagem") {
+    const t = Math.max(0, Math.floor((cfgVendas.abertura.toMillis() - Date.now()) / 1000));
+    $("cgD").textContent = Math.floor(t / 86400);
+    $("cgH").textContent = String(Math.floor(t % 86400 / 3600)).padStart(2, "0");
+    $("cgM").textContent = String(Math.floor(t % 3600 / 60)).padStart(2, "0");
+    $("cgS").textContent = String(t % 60).padStart(2, "0");
+    $("cgTitulo").textContent = "AS VENDAS ABREM EM";
+    $("cgQuando").textContent = `Abertura das vendas: ${fmtLisboa(cfgVendas.abertura.toMillis())} (hora de Portugal)`;
+  } else if (st === "embreve") {
+    $("cgTitulo").textContent = "VENDAS EM BREVE";
+    $("cgQuando").textContent = "A data de abertura das vendas vai ser anunciada no Instagram e no WhatsApp.";
+  } else if (st === "fechadas") {
+    $("cgTitulo").textContent = "VENDAS ENCERRADAS";
+    $("cgQuando").textContent = "Para mais informações, fale connosco por WhatsApp.";
+  }
+  $("mapaTitulo").textContent = fechado ? (st === "fechadas" ? "Vendas encerradas" : "Pode ver a sala — as vendas ainda não abriram")
+    : "Toque numa mesa para escolher";
+  $("btTopo").textContent = st === "abertas" ? "Escolher mesa" : st === "contagem" ? "Ver a sala" : "Ver a sala";
+  if (fechado && carrinho.size) { carrinho.clear(); render(); }
+  if (st !== estadoAnterior) { estadoAnterior = st; render(); }
+}
+onSnapshot(doc(db, "config", "vendas"), s => { cfgVendas = s.exists() ? s.data() : null; atualizarVendas(); },
+  () => { cfgVendas = null; atualizarVendas(); });
+setInterval(atualizarVendas, 1000);
+
 // ---------- escolher mesa ----------
 function abrirMesa(m) {
+  if (estadoVendas() !== "abertas") {
+    const c = $("secContagem"); c.scrollIntoView({ behavior: "smooth", block: "center" });
+    c.classList.remove("piscar"); void c.offsetWidth; c.classList.add("piscar");
+    return;
+  }
   mesaAberta = m;
   const livres = livresDaMesa(m), meus = noCarrinho(m);
   $("mmTitulo").textContent = `Mesa ${m}`;

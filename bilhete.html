@@ -28,7 +28,7 @@
 </div>
 <script type="module">
 import { db, doc, onSnapshot } from "./fb.js";
-import { EVENTO, MBWAY, WHATSAPP, euro, descreverLugares, LUGARES_POR_MESA } from "./config.js";
+import { EVENTO, MBWAY, WHATSAPP, euro, descreverLugares, BILHETE_ARTE } from "./config.js";
 
 const id = new URLSearchParams(location.search).get("id");
 const box = document.getElementById("conteudo");
@@ -52,14 +52,15 @@ else onSnapshot(doc(db, "bilhetes", id), s => {
   if (estado === "pago") {
     box.className = "bilhete";
     box.innerHTML = `<span class="tag pago">PAGO</span>
-      <h1 style="margin:10px 0 0">${EVENTO.nome}</h1>
-      <div id="qr"></div>
-      <p class="nota" style="margin:0">Apresente este QR Code na receção. Vale para ${pessoas} pessoa${pessoas > 1 ? "s" : ""}.</p>
       ${b.checkin ? `<p class="aviso" style="margin-top:10px">Entrada já registada.</p>` : ""}
-      ${det}
-      <button class="btn sec naoimprimir" style="margin-top:16px" onclick="print()">Guardar / imprimir</button>`;
-    new QRCode(document.getElementById("qr"), { text: location.origin + location.pathname + "?id=" + id, width: 220, height: 220,
-      correctLevel: QRCode.CorrectLevel.M });
+      <img id="imgBilhete" alt="Bilhete com QR Code" style="width:100%;max-width:420px;border-radius:14px;margin:14px auto 0;display:block">
+      <p class="nota" style="margin:8px 0 0">Apresente o QR Code na receção. Vale para ${pessoas} pessoa${pessoas > 1 ? "s" : ""}.</p>
+      <a class="btn naoimprimir" id="btGuardar" download="bilhete-${b.codigo}.png" style="display:block;text-decoration:none;margin-top:12px">Guardar imagem do bilhete</a>
+      ${det}`;
+    desenharBilhete(b, location.origin + location.pathname + "?id=" + id).then(url => {
+      document.getElementById("imgBilhete").src = url;
+      document.getElementById("btGuardar").href = url;
+    });
   } else if (estado === "pendente") {
     const msg = `Olá! Segue o comprovativo do MB WAY da reserva ${b.codigo} — ${euro(b.total)}.`;
     box.innerHTML = `<span class="tag pendente">A AGUARDAR PAGAMENTO</span>
@@ -74,6 +75,50 @@ else onSnapshot(doc(db, "bilhetes", id), s => {
       <a class="btn verde" style="display:block;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}">Falar por WhatsApp</a>${det}`;
   }
 }, () => box.textContent = "Não foi possível carregar o bilhete.");
+
+// ---------- imagem do bilhete (arte + dados + QR) ----------
+function carregar(src) {
+  return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+}
+async function desenharBilhete(b, link) {
+  const A = BILHETE_ARTE, W = A.largura, H = A.altura;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const arte = await carregar(A.imagem);
+  if (arte) g.drawImage(arte, 0, 0, W, H);
+  else {                                    // fundo padrão
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#1a1490"); gr.addColorStop(1, "#0a005b");
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    const [l1, l2] = await Promise.all([carregar("img/ayres.jpg"), carregar("img/posap.jpg")]);
+    const circ = (img, x) => { if (!img) return; g.save(); g.beginPath(); g.arc(x, 250, 140, 0, 7); g.clip();
+      g.drawImage(img, x - 140, 110, 280, 280); g.restore(); };
+    circ(l1, 370); circ(l2, 710);
+    g.textAlign = "center"; g.fillStyle = "#f1d47a"; g.font = "800 110px Georgia, serif";
+    g.fillText("ESTRELAS", W / 2, 560); g.fillText("DE NATAL", W / 2, 680);
+    g.fillStyle = "#d8d4ff"; g.font = "500 44px system-ui, sans-serif";
+    g.fillText("Espetáculo de Final de Ano", W / 2, 770);
+    g.fillText("AYRE'S — Ginástica & Danças Aéreas", W / 2, 840);
+    g.fillStyle = "#fbf7ec"; g.beginPath(); g.roundRect(60, A.zonaDados - 20, W - 120, H - A.zonaDados - 40, 40); g.fill();
+  }
+  // dados
+  const y0 = A.zonaDados; g.textAlign = "center";
+  g.fillStyle = A.corDestaque; g.font = "700 34px system-ui, sans-serif"; g.fillText("B I L H E T E", W / 2, y0 + 70);
+  g.fillStyle = A.corTexto; g.font = "800 64px system-ui, sans-serif"; g.fillText(b.nome, W / 2, y0 + 150, W - 200);
+  g.font = "700 44px system-ui, sans-serif"; g.fillText(descreverLugares(b.lugares), W / 2, y0 + 220, W - 160);
+  g.font = "500 36px system-ui, sans-serif";
+  g.fillText(`${b.lugares.length} pessoa${b.lugares.length > 1 ? "s" : ""} · Código ${b.codigo}`, W / 2, y0 + 278);
+  g.fillText(EVENTO.data, W / 2, y0 + 330, W - 200);
+  g.fillText(`Abertura ${EVENTO.abertura} · Início ${EVENTO.inicio}`, W / 2, y0 + 380, W - 200);
+  // QR
+  const tmp = document.createElement("div");
+  new QRCode(tmp, { text: link, width: A.qr.tamanho, height: A.qr.tamanho, correctLevel: QRCode.CorrectLevel.M });
+  const qc = tmp.querySelector("canvas");
+  g.fillStyle = "#fff"; g.fillRect(A.qr.x - 16, A.qr.y - 16, A.qr.tamanho + 32, A.qr.tamanho + 32);
+  g.drawImage(qc, A.qr.x, A.qr.y, A.qr.tamanho, A.qr.tamanho);
+  g.fillStyle = A.corTexto; g.font = "500 28px system-ui, sans-serif";
+  g.fillText(`${EVENTO.local} · ${EVENTO.morada}`, W / 2, A.qr.y + A.qr.tamanho + 62, W - 200);
+  return c.toDataURL("image/png");
+}
 
 function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 </script>

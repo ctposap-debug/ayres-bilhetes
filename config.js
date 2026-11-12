@@ -3,7 +3,7 @@
 // =====================================================================
 
 // Versão do site — aumentar a cada atualização publicada
-export const VERSAO = "v1.0.9 · 12/11/2026";
+export const VERSAO = "v1.1.0 · 12/11/2026";
 
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)
@@ -65,6 +65,16 @@ export const PROGRAMA = [
   { tema: "A Ajudante do Pai Natal", mod: "Pole Sport" },
   { parte: 5, tema: "A Árvore da Magia", mod: "Pole Sport / Pêndulo / Hoop / Solo", final: true },
 ];
+
+// 3c) Arte do bilhete (imagem 1080×1920). Enquanto img/bilhete-arte.jpg não existir, usa-se um fundo padrão.
+//     Da linha "zonaDados" para baixo a arte deve ser lisa e clara: é aí que entram os dados e o QR Code.
+export const BILHETE_ARTE = {
+  imagem: "img/bilhete-arte.jpg",
+  largura: 1080, altura: 1920,
+  zonaDados: 1000,
+  corTexto: "#14104f", corDestaque: "#8a6510",
+  qr: { x: 360, y: 1425, tamanho: 360 },
+};
 
 // 4) Preços (euros)
 export const PRECO_MESA = 160;   // mesa inteira, 4 pessoas

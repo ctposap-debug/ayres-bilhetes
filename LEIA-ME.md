@@ -34,3 +34,9 @@ Site estático (Netlify) + Firebase (Firestore e Auth). O pagamento é feito por
 
 ## Adicionar outro administrador
 Acrescentar o e-mail em `ADMINS` (`config.js`), na lista de `firestore.rules` e na variável `ADMINS` do Netlify, e criar o utilizador no Firebase Auth.
+
+## Abertura das vendas
+Painel → Mais → **Abertura das vendas**: escolher data/hora e "Guardar abertura" (ou "Abrir já"). Até lá a página mostra a contagem regressiva e a sala só para ver. "Encerrar vendas" fecha tudo. As regras do Firestore também bloqueiam reservas fora do período.
+
+## Arte do bilhete
+Colocar a imagem em `img/bilhete-arte.jpg` (1080×1920). Da altura 1000 px para baixo a arte deve ser lisa e clara — é onde o site escreve nome, mesa, código e o QR Code. Posições ajustáveis em `BILHETE_ARTE` no `config.js`. Sem a imagem, usa-se o fundo padrão.

@@ -93,6 +93,18 @@
 
     <div id="aMais" class="aba oculto">
       <div class="card">
+        <h3 style="margin-top:0">Abertura das vendas</h3>
+        <p class="nota" id="vdEstado">A carregar…</p>
+        <label for="vdData">Data e hora de abertura (hora deste aparelho)</label>
+        <input id="vdData" type="datetime-local">
+        <p class="nota" id="vdLisboa"></p>
+        <div class="linha" style="margin-top:8px">
+          <button class="btn" id="btVdGuardar">Guardar abertura</button>
+          <button class="btn sec" id="btVdAgora">Abrir já</button>
+        </div>
+        <button class="btn sec" id="btVdFechar" style="margin-top:8px">Encerrar vendas</button>
+      </div>
+      <div class="card">
         <h3 style="margin-top:0">Exportar</h3>
         <button class="btn sec" id="btCsv">Descarregar lista (Excel / CSV)</button>
       </div>
@@ -122,7 +134,7 @@
 </div></div>
 
 <script type="module">
-import { db, auth, collection, doc, onSnapshot, runTransaction, serverTimestamp, deleteField, writeBatch, getDoc, getDocs,
+import { db, auth, collection, doc, onSnapshot, runTransaction, serverTimestamp, deleteField, writeBatch, getDoc, getDocs, setDoc,
   query, where, orderBy, Timestamp } from "./fb.js";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -180,6 +192,7 @@ function iniciar() {
   unsub.push(onSnapshot(query(collection(db, "pedidos"), orderBy("criado", "desc")), s => {
     pedidos = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTudo();
   }));
+  unsub.push(onSnapshot(doc(db, "config", "vendas"), s => { cfgV = s.exists() ? s.data() : null; mostrarVendas(); }));
   unsub.push(onSnapshot(collection(db, "lugares"), s => {
     lugares = {}; s.forEach(d => lugares[d.id] = d.data()); renderTudo();
   }));
@@ -370,6 +383,43 @@ async function mostrarBilhete(bid) {
     await batch.commit(); mostrarBilhete(bid);
   };
 }
+
+// ---------- abertura das vendas ----------
+const fmtLx = ms => new Date(ms).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", weekday: "long", day: "numeric",
+  month: "long", hour: "2-digit", minute: "2-digit" });
+let cfgV = null;
+function paraInput(ms) { const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+function mostrarVendas() {
+  const ab = cfgV?.abertura?.toMillis?.();
+  if (!cfgV || !ab) $("vdEstado").innerHTML = "<b>Vendas fechadas</b> — ainda não há data de abertura. O público vê \"Vendas em breve\".";
+  else if (cfgV.fechadas) $("vdEstado").innerHTML = "<b>Vendas encerradas.</b>";
+  else if (ab > Date.now()) $("vdEstado").innerHTML = `<b>Contagem regressiva ativa.</b> Abre ${fmtLx(ab)} (hora de Portugal).`;
+  else $("vdEstado").innerHTML = `<b>Vendas abertas</b> desde ${fmtLx(ab)} (hora de Portugal).`;
+  $("btVdFechar").textContent = cfgV?.fechadas ? "Reabrir vendas" : "Encerrar vendas";
+  if (ab && document.activeElement !== $("vdData")) $("vdData").value = paraInput(ab);
+  previewLx();
+}
+function previewLx() {
+  const v = $("vdData").value;
+  $("vdLisboa").textContent = v ? `= ${fmtLx(new Date(v).getTime())} em Portugal` : "";
+}
+$("vdData").oninput = previewLx;
+async function gravarVendas(dados) {
+  try { await setDoc(doc(db, "config", "vendas"), dados, { merge: true }); }
+  catch (e) { alert("Não foi possível guardar: " + (e.code || e.message)); }
+}
+$("btVdGuardar").onclick = () => {
+  const v = $("vdData").value; if (!v) return alert("Escolha a data e a hora.");
+  const ms = new Date(v).getTime();
+  if (!confirm(`As vendas abrem ${fmtLx(ms)} (hora de Portugal). Confirmar?`)) return;
+  gravarVendas({ abertura: Timestamp.fromMillis(ms), fechadas: false });
+};
+$("btVdAgora").onclick = () => { if (confirm("Abrir as vendas agora?")) gravarVendas({ abertura: Timestamp.now(), fechadas: false }); };
+$("btVdFechar").onclick = () => {
+  const fechar = !cfgV?.fechadas;
+  if (confirm(fechar ? "Encerrar as vendas? Ninguém mais consegue reservar." : "Reabrir as vendas?")) gravarVendas({ fechadas: fechar });
+};
+setInterval(mostrarVendas, 30000);
 
 // ---------- mais ----------
 $("btInit").onclick = async () => {

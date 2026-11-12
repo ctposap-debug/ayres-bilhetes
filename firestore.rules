@@ -9,12 +9,24 @@ service cloud.firestore {
     }
     function expirou(d) { return d.estado == 'reservado' && d.expira < request.time; }
 
+    // Vendas abertas: definido no painel (Mais → Abertura das vendas)
+    function vendasAbertas() {
+      let c = get(/databases/$(db)/documents/config/vendas).data;
+      return c.fechadas == false && request.time >= c.abertura;
+    }
+
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Lugares: todos veem a disponibilidade; o público só pode RESERVAR um lugar livre,
     // dentro de uma transação que também cria o pedido correspondente.
     match /lugares/{id} {
       allow read: if true;
       allow create, delete: if isAdmin();
       allow update: if isAdmin() || (
+        vendasAbertas() &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'pedido', 'expira']) &&
         request.resource.data.estado == 'reservado' &&
         (resource.data.estado == 'livre' || expirou(resource.data)) &&

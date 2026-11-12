@@ -68,3 +68,12 @@ footer{color:var(--txt2);font-size:.8rem;text-align:center;margin-top:24px}
 .tag{display:inline-block;border-radius:20px;padding:2px 10px;font-size:.75rem;font-weight:700}
 .tag.pendente{background:var(--amarelo);color:#2b1d00}.tag.pago{background:var(--verde);color:#032}
 .tag.cancelado,.tag.expirado{background:#6b6577;color:#fff}
+
+.contagem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 0}
+.contagem div{background:var(--azul3);border-radius:12px;padding:10px 4px}
+.contagem b{display:block;font-size:2rem;color:var(--ouro2);font-variant-numeric:tabular-nums;line-height:1.1}
+.contagem span{font-size:.75rem;color:var(--txt2)}
+.mapa.bloqueado .mesa{cursor:not-allowed}
+.mapa.bloqueado .lugar.livre{fill:#5d6b8a}
+.piscar{animation:piscar .8s ease 2}
+@keyframes piscar{50%{box-shadow:0 0 0 3px var(--ouro)}}
