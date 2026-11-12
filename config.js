@@ -3,7 +3,7 @@
 // =====================================================================
 
 // Versão do site — aumentar a cada atualização publicada
-export const VERSAO = "v1.1.2 · 12/11/2026";
+export const VERSAO = "v1.1.3 · 12/11/2026";
 
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)

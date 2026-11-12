@@ -77,3 +77,10 @@ footer{color:var(--txt2);font-size:.8rem;text-align:center;margin-top:24px}
 .mapa.bloqueado .lugar.livre{fill:#5d6b8a}
 .piscar{animation:piscar .8s ease 2}
 @keyframes piscar{50%{box-shadow:0 0 0 3px var(--ouro)}}
+
+.prog-box summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.prog-box summary::-webkit-details-marker{display:none}
+.prog-box summary>span{color:var(--ouro2);font-weight:800;font-size:1.2rem}
+.prog-box summary::after{content:"▾";color:var(--ouro);font-size:1.3rem;transition:transform .2s}
+.prog-box[open] summary::after{transform:rotate(180deg)}
+.prog-box[open] summary small{display:none}
