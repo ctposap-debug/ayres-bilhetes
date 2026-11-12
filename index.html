@@ -211,6 +211,7 @@ function atualizarVendas() {
   $("secContagem").classList.toggle("oculto", st === "abertas" || st === "carregando");
   $("cgRelogio").classList.toggle("oculto", st !== "contagem");
   $("mapa").classList.toggle("bloqueado", fechado);
+  $("secMapa").classList.toggle("oculto", fechado && st !== "carregando");
   if (st === "contagem") {
     const t = Math.max(0, Math.floor((cfgVendas.abertura.toMillis() - Date.now()) / 1000));
     $("cgD").textContent = Math.floor(t / 86400);
@@ -228,7 +229,8 @@ function atualizarVendas() {
   }
   $("mapaTitulo").textContent = fechado ? (st === "fechadas" ? "Vendas encerradas" : "Pode ver a sala — as vendas ainda não abriram")
     : "Toque numa mesa para escolher";
-  $("btTopo").textContent = st === "abertas" ? "Escolher mesa" : st === "contagem" ? "Ver a sala" : "Ver a sala";
+  $("btTopo").textContent = st === "abertas" ? "Escolher mesa" : "Ver quando abrem as vendas";
+  $("btTopo").href = st === "abertas" ? "#secMapa" : "#secContagem";
   if (fechado && carrinho.size) { carrinho.clear(); render(); }
   if (st !== estadoAnterior) { estadoAnterior = st; render(); }
 }
