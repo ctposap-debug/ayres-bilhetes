@@ -3,7 +3,7 @@
 // =====================================================================
 
 // Versão do site — aumentar a cada atualização publicada
-export const VERSAO = "v1.0.5 · 12/11/2026";
+export const VERSAO = "v1.0.6 · 12/11/2026";
 
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)
@@ -39,31 +39,31 @@ export const EVENTO = {
 };
 
 // 3b) Programação. Em "parte" começa um novo bloco do espetáculo.
-//     MOSTRAR_ALUNAS = false esconde os nomes na página pública (há crianças no elenco).
+//     Os nomes das alunas não ficam no código (repositório público e elenco com crianças).
 export const MOSTRAR_ALUNAS = false;
 export const PROGRAMA = [
-  { parte: 1, tema: "Loba da Neve", mod: "Pole Sport", alunas: "Francisca Craveiro" },
-  { parte: 2, tema: "SnowWoman", mod: "Pole Pêndulo", alunas: "Geovana Lima" },
-  { tema: "Sininhos", mod: "Pole Sport / Pêndulo / Hoop · Kids 2", alunas: "Sasha, Vira, Mini Alisa (poles), Yassenia e Nikol (hoop)" },
-  { tema: "Chocolate Quente", mod: "Pole Pêndulo", alunas: "Alexia Lima" },
-  { tema: "Caixinha de Música", mod: "Pole Sport", alunas: "Alisa Zhurbenko" },
-  { tema: "Biscoitos da Alegria", mod: "Pole / Pêndulo / Hoop · Kids 1", alunas: "Yasseniia, Nikol (pole), Helena, Isabel, Petra, Irina (hoop)" },
-  { tema: "Pijama Mágico", mod: "Hoop", alunas: "Geovana Lima" },
-  { tema: "Festa no Telhado", mod: "Pole Sport", alunas: "Varvara" },
-  { tema: "Guirlandas do Bem", mod: "Hoop", alunas: "Madalena, Yasseniia, Inês" },
-  { tema: "Família", mod: "Pole Sport", alunas: "Marta Patrão" },
-  { tema: "A Carta para o Pai Natal", mod: "Pole Sport", alunas: "Maria Eduarda" },
-  { parte: 3, tema: "A Mãe do Presépio", mod: "Pole Sport Double", alunas: "Alexia Lima e Geovana Lima" },
-  { tema: "Mãe Natal", mod: "Hoop + Pole", alunas: "Ana Matos" },
-  { tema: "Rock de Natal", mod: "Hoop Kids Inter", alunas: "Sasha, Vira e Mini Alisa" },
-  { tema: "A Princesa da Neve", mod: "Pole Sport", alunas: "Mariana Fedorova" },
-  { tema: "Elfa da Magia do Amor", mod: "Hoop (paratleta)", alunas: "Nastasia Varganova" },
-  { tema: "O Som do Natal", mod: "Pole Sport", alunas: "Liam Aronow" },
-  { tema: "O Trenó", mod: "Pole Pêndulo", alunas: "Francisca Craveiro" },
-  { tema: "Quebra-Nozes", mod: "Pole Sport", alunas: "Barbara Sinalyova" },
-  { parte: 4, tema: "A Estrela", mod: "Hoop Kids", alunas: "Varvara" },
-  { tema: "A Ajudante do Pai Natal", mod: "Pole Sport", alunas: "Alexia Lima" },
-  { parte: 5, tema: "A Árvore da Magia", mod: "Pole Sport / Pêndulo / Hoop / Solo", alunas: "Todos os alunos", final: true },
+  { parte: 1, tema: "Loba da Neve", mod: "Pole Sport" },
+  { parte: 2, tema: "SnowWoman", mod: "Pole Pêndulo" },
+  { tema: "Sininhos", mod: "Pole Sport / Pêndulo / Hoop · Kids 2" },
+  { tema: "Chocolate Quente", mod: "Pole Pêndulo" },
+  { tema: "Caixinha de Música", mod: "Pole Sport" },
+  { tema: "Biscoitos da Alegria", mod: "Pole / Pêndulo / Hoop · Kids 1" },
+  { tema: "Pijama Mágico", mod: "Hoop" },
+  { tema: "Festa no Telhado", mod: "Pole Sport" },
+  { tema: "Guirlandas do Bem", mod: "Hoop" },
+  { tema: "Família", mod: "Pole Sport" },
+  { tema: "A Carta para o Pai Natal", mod: "Pole Sport" },
+  { parte: 3, tema: "A Mãe do Presépio", mod: "Pole Sport Double" },
+  { tema: "Mãe Natal", mod: "Hoop + Pole" },
+  { tema: "Rock de Natal", mod: "Hoop Kids Inter" },
+  { tema: "A Princesa da Neve", mod: "Pole Sport" },
+  { tema: "Elfa da Magia do Amor", mod: "Hoop (paratleta)" },
+  { tema: "O Som do Natal", mod: "Pole Sport" },
+  { tema: "O Trenó", mod: "Pole Pêndulo" },
+  { tema: "Quebra-Nozes", mod: "Pole Sport" },
+  { parte: 4, tema: "A Estrela", mod: "Hoop Kids" },
+  { tema: "A Ajudante do Pai Natal", mod: "Pole Sport" },
+  { parte: 5, tema: "A Árvore da Magia", mod: "Pole Sport / Pêndulo / Hoop / Solo", final: true },
 ];
 
 // 4) Preços (euros)
