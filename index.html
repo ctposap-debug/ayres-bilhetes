@@ -272,7 +272,8 @@ $("fDados").onsubmit = async e => {
     console.error(err);
     $("mdErro").textContent = err.message === "ocupado"
       ? "Alguém acabou de reservar um destes lugares. Volte ao mapa e escolha de novo."
-      : "Não foi possível concluir a reserva. Verifique a ligação e tente novamente.";
+      : err.message?.startsWith("Lugar inexistente") ? "As vendas ainda não estão abertas (sala por configurar)."
+      : `Não foi possível concluir a reserva. Tente novamente. (${err.code || err.message})`;
     $("mdErro").classList.remove("oculto");
   } finally { bt.disabled = false; bt.textContent = "Reservar"; }
 };
