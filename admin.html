@@ -144,7 +144,15 @@ $("fLogin").onsubmit = async e => {
 $("btGoogle").onclick = async () => {
   $("lErro").classList.add("oculto");
   try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-  catch (e) { if (e.code !== "auth/popup-closed-by-user") alertar("Não foi possível entrar com Google. Tente de novo."); }
+  catch (e) {
+    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return;
+    const msg = {
+      "auth/unauthorized-domain": "Este endereço ainda não está autorizado no Firebase (Authentication → Configurações → Domínios autorizados).",
+      "auth/popup-blocked": "O navegador bloqueou a janela do Google. Permita pop-ups para este site e tente de novo.",
+      "auth/operation-not-allowed": "O login com Google não está ativado no Firebase."
+    }[e.code];
+    alertar((msg || "Não foi possível entrar com Google.") + " (" + (e.code || e.message) + ")");
+  }
 };
 $("lnkReset").onclick = async e => {
   e.preventDefault(); const em = $("lEmail").value.trim();
