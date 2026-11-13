@@ -85,6 +85,9 @@
         <div id="leitor"></div>
         <button class="btn" id="btLer" style="margin-top:10px">Ler QR Code</button>
         <p class="nota" style="margin:6px 0 0">A câmara fica ligada para ler vários bilhetes seguidos.</p>
+        <label style="display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 0;color:var(--txt);font-size:1rem">
+          <input type="checkbox" id="ckAuto" style="width:22px;height:22px"> Entrada automática (computador na porta)</label>
+        <p class="nota" style="margin:4px 0 0">Com isto ligado, bilhete válido = entrada registada sozinha, com ecrã grande verde/vermelho e som.</p>
         <div class="linha" style="margin-top:10px">
           <input id="codManual" placeholder="ou escreva o código (ex.: K3F9QZ)" style="text-transform:uppercase">
           <button class="btn sec" id="btCod" style="flex:0 0 auto;width:auto">Procurar</button>
@@ -124,6 +127,15 @@
     </div>
   </section>
   <p class="nota centro" id="versao" style="opacity:.6;font-size:.72rem;margin-top:20px"></p>
+</div>
+
+<!-- resultado grande da entrada automática -->
+<div id="telaEntrada" style="position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:30px;color:#fff;font-family:system-ui,sans-serif">
+  <div id="teIcone" style="font-size:7rem;line-height:1"></div>
+  <div id="teTitulo" style="font-size:3rem;font-weight:900;margin:10px 0"></div>
+  <div id="teNome" style="font-size:2.2rem;font-weight:700"></div>
+  <div id="teDet" style="font-size:1.6rem;margin-top:8px;opacity:.95"></div>
 </div>
 
 <!-- confirmação enviada -->
@@ -363,7 +375,7 @@ $("btLer").onclick = async () => {
       if (id === ultimoLido && Date.now() - ultimoEm < 4000) return;   // evita ler o mesmo duas vezes seguidas
       ultimoLido = id; ultimoEm = Date.now();
       try { navigator.vibrate?.(120); } catch {}
-      mostrarBilhete(id);
+      $("ckAuto").checked ? entradaAutomatica(id) : mostrarBilhete(id);
     });
   } catch { await pararLeitor(); alert("Não foi possível abrir a câmara. Autorize o acesso à câmara para este site."); }
 };
@@ -372,6 +384,59 @@ $("btCod").onclick = () => {
   const p = pedidos.find(x => x.codigo === c);
   p ? mostrarBilhete(p.bilhete) : ($("resCheckin").innerHTML = `<div class="erro">Código não encontrado.</div>`);
 };
+// ---------- entrada automática ----------
+let audioCtx;
+function bip(ok) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const notas = ok ? [880, 1320] : [300, 220];
+    notas.forEach((f, i) => { const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = f; o.type = ok ? "sine" : "square"; g.gain.value = .25; o.connect(g); g.connect(audioCtx.destination);
+      const t = audioCtx.currentTime + i * .18; o.start(t); o.stop(t + .16); });
+  } catch {}
+}
+let teTimer;
+function telaEntrada(tipo, titulo, nome, det) {
+  const cor = { ok: "#0f9d58", ja: "#e6a700", erro: "#d93025" }[tipo];
+  const t = $("telaEntrada"); t.style.background = cor; t.style.display = "flex";
+  $("teIcone").textContent = tipo === "ok" ? "✓" : tipo === "ja" ? "!" : "✕";
+  $("teTitulo").textContent = titulo; $("teNome").textContent = nome || ""; $("teDet").innerHTML = det || "";
+  bip(tipo === "ok");
+  clearTimeout(teTimer); teTimer = setTimeout(() => t.style.display = "none", tipo === "ok" ? 3000 : 4500);
+}
+$("telaEntrada").onclick = () => $("telaEntrada").style.display = "none";
+let wakeLock = null;
+$("ckAuto").onchange = async () => {
+  if ($("ckAuto").checked) {
+    try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}   // não deixa o ecrã apagar
+    if (!leitor) $("btLer").click();
+  } else { try { await wakeLock?.release(); } catch {} wakeLock = null; }
+};
+document.addEventListener("visibilitychange", async () => {
+  if ($("ckAuto").checked && document.visibilityState === "visible") { try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {} }
+});
+async function entradaAutomatica(bid) {
+  const s = await getDoc(doc(db, "bilhetes", bid)).catch(() => null);
+  if (!s || !s.exists()) return telaEntrada("erro", "BILHETE INVÁLIDO", "", "Procure a organização.");
+  const b = s.data(), p = pedidos.find(x => x.id === b.pedido) || {}, nome = p.nome || b.nome;
+  const det = `${descreverLugares(b.lugares)} · ${b.lugares.length} pessoa${b.lugares.length > 1 ? "s" : ""}`;
+  if (b.estado !== "pago") return telaEntrada("erro", "NÃO PAGO", nome, `${det}<br>Procure a organização.`);
+  if (b.checkin) return telaEntrada("ja", "JÁ ENTROU", nome, `${det}<br>Entrada registada às ${fmtData(b.checkin)}`);
+  try {
+    await runTransaction(db, async tx => {
+      const bref = doc(db, "bilhetes", bid), atual = await tx.get(bref);
+      if (atual.data()?.checkin) throw new Error("ja");
+      tx.update(bref, { checkin: serverTimestamp() });
+      tx.update(doc(db, "pedidos", b.pedido), { checkin: serverTimestamp() });
+    });
+    telaEntrada("ok", "BEM-VINDO" + (b.lugares.length > 1 ? "S" : ""), nome, det);
+  } catch (e) {
+    if (e.message === "ja") telaEntrada("ja", "JÁ ENTROU", nome, det);
+    else telaEntrada("erro", "ERRO", nome, "Sem ligação? Tente de novo.");
+  }
+  mostrarBilhete(bid);
+}
+
 async function mostrarBilhete(bid) {
   const box = $("resCheckin");
   const s = bid && await getDoc(doc(db, "bilhetes", bid)).catch(() => null);
