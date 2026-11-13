@@ -3,7 +3,7 @@
 // =====================================================================
 
 // Versão do site — aumentar a cada atualização publicada
-export const VERSAO = "v1.1.5 · 12/11/2026";
+export const VERSAO = "v1.1.6 · 13/11/2026";
 
 // 1) Cole aqui a configuração do projeto Firebase
 //    (Consola Firebase > Definições do projeto > As suas apps > Web)
@@ -51,7 +51,7 @@ export const PROGRAMA = [
   { tema: "Pijama Mágico", mod: "Hoop" },
   { tema: "Festa no Telhado", mod: "Pole Sport" },
   { tema: "Guirlandas do Bem", mod: "Hoop" },
-  { tema: "Juntos pelo Natal", mod: "Pole Sport" },
+  { tema: "Together for the Christmas", mod: "Pole Sport" },
   { tema: "A Carta para o Pai Natal", mod: "Pole Sport" },
   { parte: 3, tema: "A Mãe do Presépio", mod: "Pole Sport Double" },
   { tema: "Mãe Natal", mod: "Hoop + Pole" },
