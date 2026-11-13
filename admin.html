@@ -84,6 +84,7 @@
       <div class="card centro">
         <div id="leitor"></div>
         <button class="btn" id="btLer" style="margin-top:10px">Ler QR Code</button>
+        <p class="nota" style="margin:6px 0 0">A câmara fica ligada para ler vários bilhetes seguidos.</p>
         <div class="linha" style="margin-top:10px">
           <input id="codManual" placeholder="ou escreva o código (ex.: K3F9QZ)" style="text-transform:uppercase">
           <button class="btn sec" id="btCod" style="flex:0 0 auto;width:auto">Procurar</button>
@@ -107,7 +108,7 @@
       </div>
       <div class="card">
         <h3 style="margin-top:0">Exportar</h3>
-        <button class="btn sec" id="btCsv">Descarregar lista (Excel / CSV)</button>
+        <button class="btn sec" id="btCsv">Descarregar lista (Excel)</button>
       </div>
       <div class="card">
         <h3 style="margin-top:0">Configurar sala</h3>
@@ -347,18 +348,24 @@ async function vendaLocal() {
 }
 
 // ---------- entrada (check-in) ----------
-let leitor = null;
+let leitor = null, ultimoLido = "", ultimoEm = 0;
+async function pararLeitor() { if (leitor) { await leitor.stop().catch(() => {}); leitor = null; } $("btLer").textContent = "Ler QR Code"; }
 $("btLer").onclick = async () => {
-  if (leitor) { await leitor.stop().catch(() => {}); leitor = null; $("btLer").textContent = "Ler QR Code"; return; }
+  if (leitor) return pararLeitor();
   leitor = new Html5Qrcode("leitor");
   $("btLer").textContent = "Parar câmara";
   try {
-    await leitor.start({ facingMode: "environment" }, { fps: 10, qrbox: 230 }, async txt => {
-      const id = new URL(txt, location.href).searchParams.get("id");
-      await leitor.stop().catch(() => {}); leitor = null; $("btLer").textContent = "Ler QR Code";
+    // a câmara fica ligada: dá para ler vários bilhetes seguidos na porta
+    await leitor.start({ facingMode: "environment" }, { fps: 10, qrbox: 230 }, txt => {
+      let id = null;
+      try { id = new URL(txt, location.href).searchParams.get("id"); } catch {}
+      if (!id) { $("resCheckin").innerHTML = `<div class="erro" style="margin-top:12px">Este QR Code não é um bilhete.</div>`; return; }
+      if (id === ultimoLido && Date.now() - ultimoEm < 4000) return;   // evita ler o mesmo duas vezes seguidas
+      ultimoLido = id; ultimoEm = Date.now();
+      try { navigator.vibrate?.(120); } catch {}
       mostrarBilhete(id);
     });
-  } catch { leitor = null; $("btLer").textContent = "Ler QR Code"; alert("Não foi possível abrir a câmara."); }
+  } catch { await pararLeitor(); alert("Não foi possível abrir a câmara. Autorize o acesso à câmara para este site."); }
 };
 $("btCod").onclick = () => {
   const c = $("codManual").value.trim().toUpperCase();
@@ -434,13 +441,21 @@ $("btInit").onclick = async () => {
   $("initRes").textContent = n ? `${n} lugares criados.` : "A sala já estava configurada.";
 };
 
-$("btCsv").onclick = () => {
-  const cab = ["Código", "Estado", "Nome", "Telemóvel", "E-mail", "Lugares", "Pessoas", "Valor (€)", "Criado", "Origem", "Entrou", "Observações"];
-  const linhas = pedidos.map(p => [p.codigo, estadoPed(p), p.nome, p.telefone, p.email, descreverLugares(p.lugares), p.lugares.length,
-    String(precoDosLugares(p.lugares)).replace(".", ","), fmtData(p.criado), p.origem || "online", p.checkin ? "sim" : "", p.nota || ""]);
-  const csv = "﻿" + [cab, ...linhas].map(r => r.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
-  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = "bilhetes-ayres.csv"; a.click();
+$("btCsv").onclick = async () => {
+  if (!window.XLSX) await new Promise((ok, erro) => { const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = erro;
+    document.head.appendChild(sc); }).catch(() => alert("Não foi possível preparar o ficheiro. Verifique a ligação."));
+  if (!window.XLSX) return;
+  const linhas = pedidos.map(p => ({
+    "Código": p.codigo, "Estado": estadoPed(p), "Nome": p.nome, "Telemóvel": String(p.telefone || ""),
+    "E-mail": p.email, "Lugares": descreverLugares(p.lugares), "Pessoas": p.lugares.length,
+    "Valor (€)": precoDosLugares(p.lugares), "Criado": fmtData(p.criado), "Pago em": fmtData(p.pagoEm),
+    "Origem": p.origem || "online", "Entrou": p.checkin ? "sim" : "", "Observações": p.nota || ""
+  }));
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  ws["!cols"] = [8, 11, 26, 14, 28, 26, 8, 10, 14, 14, 9, 7, 30].map(w => ({ wch: w }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Reservas");
+  XLSX.writeFile(wb, `bilhetes-ayres-${new Date().toISOString().slice(0, 10)}.xlsx`);
 };
 
 // ---------- abas e modais ----------
