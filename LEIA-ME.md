@@ -22,12 +22,10 @@ Site estático (Netlify) + Firebase (Firestore e Auth). O pagamento é feito por
    - Authentication → Settings → Authorized domains → adicionar `bilhetes.ayrespolesport.com`.
 2. **GitHub / Netlify**: repositório privado → site novo no Netlify ligado ao repositório (sem comando de build).
 3. **Domínio** (painel DNS do One.com): registo `CNAME` `bilhetes` → `<nome-do-site>.netlify.app`. No Netlify, adicionar o domínio `bilhetes.ayrespolesport.com` (HTTPS automático).
-4. **E-mail (Brevo)**, opcional mas recomendado:
-   - Conta Brevo → Senders & Domains → autenticar `ayrespolesport.com` (copiar os registos TXT/CNAME para o DNS do One.com).
-   - No Netlify → Environment variables:
-     `BREVO_API_KEY`, `FIREBASE_API_KEY` (igual ao do config), `FIREBASE_PROJECT_ID`,
-     `ADMINS=cursos@ayrespolesport.com,ct.posap@gmail.com`, `REMETENTE_EMAIL=cursos@ayrespolesport.com`, `REMETENTE_NOME=AYRE'S`
-   - Sem isto, o painel continua a funcionar e o bilhete vai por WhatsApp.
+4. **E-mail dos bilhetes** (sai direto da caixa cursos@ayrespolesport.com, pelo One.com):
+   - Netlify → Project configuration → Environment variables → adicionar:
+     `SMTP_USER=cursos@ayrespolesport.com` e `SMTP_PASS=<palavra-passe dessa caixa de e-mail>`
+   - Fazer "Trigger deploy" depois de adicionar. Sem isto, o painel funciona e o bilhete vai só por WhatsApp.
 5. Entrar em `/admin.html` → **Mais → Criar lugares das mesas**.
 6. Fazer uma compra de teste, confirmar, abrir o bilhete, testar a leitura do QR e cancelar.
 7. No site do One.com: botão "Comprar bilhetes" → `https://bilhetes.ayrespolesport.com`.
