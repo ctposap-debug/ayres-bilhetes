@@ -130,8 +130,8 @@ export default async (req) => {
 
   try {
     if (usaSMTP) {
-      await enviarSMTP({ host: E.SMTP_HOST || "send.one.com", port: Number(E.SMTP_PORT || 465), user: E.SMTP_USER, pass: E.SMTP_PASS,
-        from: E.SMTP_USER, fromName: nomeRem, to: p.email, toName: p.nome, subject: assunto, html });
+      await enviarSMTP({ host: E.SMTP_HOST || "send.one.com", port: Number(E.SMTP_PORT || 465), user: E.SMTP_USER.trim(), pass: E.SMTP_PASS.trim(),
+        from: E.SMTP_USER.trim(), fromName: nomeRem, to: p.email, toName: p.nome, subject: assunto, html });
     } else {
       const b = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST", headers: { "api-key": E.BREVO_API_KEY, "Content-Type": "application/json", accept: "application/json" },
