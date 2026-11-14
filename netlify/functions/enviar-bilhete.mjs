@@ -26,14 +26,23 @@ function valor(v) {
 }
 
 // ---------- cliente SMTP mínimo (TLS implícito, porta 465) ----------
-export function enviarSMTP({ host, port, user, pass, from, fromName, to, toName, subject, html, rejectUnauthorized = true }) {
+export function enviarSMTP({ host, port, user, pass, from, fromName, to, toName, subject, html, imagem, rejectUnauthorized = true }) {
   return new Promise((resolve, reject) => {
     const sock = tls.connect({ host, port, servername: host, rejectUnauthorized });
     let buf = "", passo = 0, terminado = false;
     const fim = (erro) => { if (terminado) return; terminado = true; try { sock.end(); } catch {} erro ? reject(erro) : resolve(); };
     const linha = l => sock.write(l + "\r\n");
     const enc = t => `=?UTF-8?B?${b64(t)}?=`;
-    const corpo = b64(html).replace(/.{76}/g, "$&\r\n");
+    const quebra = t => t.replace(/.{76}/g, "$&\r\n");
+    const corpo = quebra(b64(html));
+    const fronteira = "----ayres" + Math.random().toString(36).slice(2);
+    const conteudo = imagem ? [
+      `Content-Type: multipart/related; boundary="${fronteira}"`, "",
+      `--${fronteira}`, "Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: base64", "", corpo,
+      `--${fronteira}`, `Content-Type: ${imagem.tipo}; name="${imagem.nome}"`, "Content-Transfer-Encoding: base64",
+      `Content-ID: <${imagem.cid}>`, `Content-Disposition: inline; filename="${imagem.nome}"`, "", quebra(imagem.base64),
+      `--${fronteira}--`,
+    ] : ["Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: base64", "", corpo];
     const msg = [
       `From: ${enc(fromName)} <${from}>`,
       `To: ${enc(toName || to)} <${to}>`,
@@ -42,10 +51,7 @@ export function enviarSMTP({ host, port, user, pass, from, fromName, to, toName,
       `Date: ${new Date().toUTCString()}`,
       `Message-ID: <${Date.now()}.${Math.random().toString(36).slice(2)}@${from.split("@")[1]}>`,
       "MIME-Version: 1.0",
-      "Content-Type: text/html; charset=UTF-8",
-      "Content-Transfer-Encoding: base64",
-      "",
-      corpo,
+      ...conteudo,
     ].join("\r\n");
     // sequência: [código esperado, comando a enviar a seguir]
     const etapas = [
@@ -87,7 +93,7 @@ export default async (req) => {
   if (!usaSMTP && !usaBrevo) return resp(500, { erro: "e-mail não configurado" });
 
   const token = (req.headers.get("authorization") || "").replace(/^Bearer /, "");
-  const { pedido, link } = await req.json().catch(() => ({}));
+  const { pedido, link, imagem } = await req.json().catch(() => ({}));
   if (!token || !pedido || !link) return resp(400, { erro: "pedido inválido" });
 
   // 1) confirma que quem pede é da organização
@@ -113,6 +119,12 @@ export default async (req) => {
   const h = urlBilhete.hostname;
   if (!(h === new URL(req.url).hostname || h.endsWith("ayrespolesport.com") || h.endsWith(".netlify.app"))) return resp(400, { erro: "link inválido" });
 
+  // imagem do bilhete gerada no painel (JPEG/PNG em data URL)
+  let anexo = null;
+  const m = typeof imagem === "string" && imagem.match(/^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/);
+  if (m && m[2].length < 4_000_000) anexo = { tipo: m[1], base64: m[2], cid: "bilhete@ayrespolesport.com",
+    nome: `bilhete-${p.codigo}.${m[1] === "image/png" ? "png" : "jpg"}` };
+
   const n = (p.lugares || []).length;
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(urlBilhete.href)}`;
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;background:#0a005b;color:#f3f1ff;padding:28px;border-radius:16px">
@@ -122,7 +134,10 @@ export default async (req) => {
     <p><b>Código:</b> ${esc(p.codigo)}<br><b>Pessoas:</b> ${n}<br>
        <b>Data:</b> 13 de dezembro de 2026 · abertura 19h00 · início 19h30<br>
        <b>Local:</b> POSAP — Centro de Treinamento e Eventos, Sintra</p>
-    <div style="text-align:center;margin:20px 0"><img src="${qr}" width="240" height="240" alt="QR Code" style="background:#fff;border-radius:10px"></div>
+    ${anexo
+      ? `<div style="text-align:center;margin:20px 0"><img src="cid:${anexo.cid}" width="360" alt="Bilhete com QR Code" style="width:100%;max-width:360px;border-radius:14px"></div>
+         <p style="color:#b9b6e6;font-size:13px;text-align:center">O bilhete também vai em anexo para guardar no telemóvel.</p>`
+      : `<div style="text-align:center;margin:20px 0"><img src="${qr}" width="240" height="240" alt="QR Code" style="background:#fff;border-radius:10px"></div>`}
     <p style="text-align:center"><a href="${esc(urlBilhete.href)}" style="background:#d4af37;color:#1a1440;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:bold">Abrir e guardar o bilhete</a></p>
     <p style="color:#b9b6e6;font-size:13px">Apresente o QR Code na receção. Qualquer dúvida, responda a este e-mail.</p></div>`;
   const assunto = `O seu bilhete — Estrelas de Natal (${p.codigo})`;
@@ -131,12 +146,14 @@ export default async (req) => {
   try {
     if (usaSMTP) {
       await enviarSMTP({ host: E.SMTP_HOST || "send.one.com", port: Number(E.SMTP_PORT || 465), user: E.SMTP_USER.trim(), pass: E.SMTP_PASS.trim(),
-        from: E.SMTP_USER.trim(), fromName: nomeRem, to: p.email, toName: p.nome, subject: assunto, html });
+        from: E.SMTP_USER.trim(), fromName: nomeRem, to: p.email, toName: p.nome, subject: assunto, html, imagem: anexo });
     } else {
       const b = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST", headers: { "api-key": E.BREVO_API_KEY, "Content-Type": "application/json", accept: "application/json" },
         body: JSON.stringify({ sender: { email: E.REMETENTE_EMAIL, name: nomeRem }, replyTo: { email: E.REMETENTE_EMAIL },
-          to: [{ email: p.email, name: p.nome }], subject: assunto, htmlContent: html })
+          to: [{ email: p.email, name: p.nome }], subject: assunto,
+          htmlContent: anexo ? html.replace(`cid:${anexo.cid}`, "") : html,
+          ...(anexo ? { attachment: [{ name: anexo.nome, content: anexo.base64 }] } : {}) })
       });
       if (!b.ok) throw new Error("Brevo " + b.status);
     }
