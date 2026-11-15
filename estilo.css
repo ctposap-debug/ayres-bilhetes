@@ -1,5 +1,5 @@
 :root{
-  --folga-selo:76px; /* espaço por baixo para o selo do Netlify não tapar botões (pôr 0px se o selo for desligado) */
+  --folga-selo:0px; /* espaço por baixo para o selo do Netlify não tapar botões (pôr 0px se o selo for desligado) */
   --azul:#0a005b; --azul2:#15107a; --azul3:#221c96; --ouro:#d4af37; --ouro2:#f1d47a;
   --laranja:#e8642c; --txt:#f3f1ff; --txt2:#b9b6e6; --verde:#3ecf8e; --amarelo:#f5b942; --verm:#e5484d;
 }

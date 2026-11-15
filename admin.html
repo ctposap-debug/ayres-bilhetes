@@ -298,16 +298,18 @@ async function confirmar(p) {
 async function enviarEmail(p) {
   try {
     const token = await auth.currentUser.getIdToken();
-    let imagem = null;
+    let imagem = null, erroImg = "";
     try {   // a imagem do bilhete (com a arte) é gerada aqui e vai anexada ao e-mail
       imagem = await desenharBilhete({ nome: String(p.nome).trim().split(/\s+/)[0], codigo: p.codigo, lugares: p.lugares },
         linkBilhete(p.bilhete), "image/jpeg", 0.85);
-    } catch (e) { console.warn("sem imagem do bilhete", e); }
+    } catch (e) { console.warn("sem imagem do bilhete", e); erroImg = String(e?.message || e).slice(0, 60); }
     const r = await fetch("/.netlify/functions/enviar-bilhete", { method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       body: JSON.stringify({ pedido: p.id, link: linkBilhete(p.bilhete), imagem }) });
     const j = await r.json().catch(() => ({}));
-    return r.ok ? `E-mail enviado para ${p.email}.` : `E-mail não enviado (${j.erro || r.status}). Use o WhatsApp.`;
+    if (!r.ok) return `E-mail não enviado (${j.erro || r.status}). Use o WhatsApp.`;
+    return j.comImagem ? `E-mail enviado para ${p.email}, com o bilhete em imagem.`
+      : `E-mail enviado para ${p.email}, mas sem a imagem do bilhete${erroImg ? " (" + erroImg + ")" : ""}.`;
   } catch { return "E-mail não enviado. Use o WhatsApp."; }
 }
 

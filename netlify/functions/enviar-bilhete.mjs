@@ -158,5 +158,5 @@ export default async (req) => {
       if (!b.ok) throw new Error("Brevo " + b.status);
     }
   } catch (e) { return resp(502, { erro: String(e.message || e).slice(0, 120) }); }
-  return resp(200, { ok: true });
+  return resp(200, { ok: true, comImagem: !!anexo });
 };
