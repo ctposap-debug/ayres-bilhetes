@@ -2,6 +2,10 @@
   publish = "."
   functions = "netlify/functions"
 
+# A chave da app web do Firebase é pública por natureza (vai no site); os dados são protegidos pelas regras do Firestore.
+[build.environment]
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIzaSyCcqoL0jbcjpC9ZTGnLGNFSv9V9EOh6WqQ"
+
 [[headers]]
   for = "/admin.html"
   [headers.values]
